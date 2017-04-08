@@ -1,46 +1,58 @@
 # -*- coding: utf-8 -*-
-###############################################################################################################
-# This file is part of MELODIST - MEteoroLOgical observation time series DISaggregation Tool                  #
-# a program to disaggregate daily values of meteorological variables to hourly values                         #
-#                                                                                                             #
-# Copyright (C) 2016  Florian Hanzer (1,2), Kristian Förster (1,2), Benjamin Winter (1,2), Thomas Marke (1)   #
-#                                                                                                             #
-# (1) Institute of Geography, University of Innsbruck, Austria                                                #
-# (2) alpS - Centre for Climate Change Adaptation, Innsbruck, Austria                                         #
-#                                                                                                             #
-# MELODIST is free software: you can redistribute it and/or modify                                            #
-# it under the terms of the GNU General Public License as published by                                        #
-# the Free Software Foundation, either version 3 of the License, or                                           #
-# (at your option) any later version.                                                                         #
-#                                                                                                             #
-# MELODIST is distributed in the hope that it will be useful,                                                 #
-# but WITHOUT ANY WARRANTY; without even the implied warranty of                                              #
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                                                #
-# GNU General Public License for more details.                                                                #
-#                                                                                                             #
-# You should have received a copy of the GNU General Public License                                           #
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.                                       #
-#                                                                                                             #
-###############################################################################################################
+########################################################################
+# This file is part of MELODIST - MEteoroLOgical observation time      #
+# series DISaggregation Tool a program to disaggregate daily values of #
+# meteorological variables to hourly values                            #
+#                                                                      #
+# Copyright (C) 2016  Florian Hanzer (1,2), Kristian Förster (1,2),    #
+# Benjamin Winter (1,2), Thomas Marke (1)                              #
+# (1) Institute of Geography, University of Innsbruck, Austria         #
+# (2) alpS - Centre for Climate Change Adaptation, Innsbruck, Austria  #
+#                                                                      #
+# MELODIST is free software: you can redistribute it and/or modify     #
+# it under the terms of the GNU General Public License as published by #
+# the Free Software Foundation, either version 3 of the License, or    #
+# (at your option) any later version.                                  #
+#                                                                      #
+# MELODIST is distributed in the hope that it will be useful,          #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of       #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the         #
+# GNU General Public License for more details.                         #
+#                                                                      #
+# You should have received a copy of the GNU General Public License    #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.#
+#                                                                      #
+########################################################################
 
 from __future__ import print_function, division, absolute_import
 import numpy as np
 import pandas as pd
 import scipy.stats
 
+
 def hourly_index(daily_index, fill_gaps=False):
-    index = pd.DatetimeIndex(start=daily_index.min(), end=daily_index.max().replace(hour=23), freq='H')
+    index = pd.DatetimeIndex(start=daily_index.min(),
+                             end=daily_index.max().replace(hour=23),
+                             freq='H')
 
     # remove days that are not in the daily index:
     if not fill_gaps and len(index) > len(daily_index) * 24:
-        df = pd.DataFrame(index=index.date, data=dict(hour=index.hour, keep=True))
+        df = pd.DataFrame(index=index.date,
+                          data=dict(hour=index.hour,
+                                    keep=True))
         df.index = df.index.to_datetime()
         dropdates = list(set(index.date) - set(daily_index.date))
         df.loc[dropdates, 'keep'] = False
         df = df[df.keep]
-        index = pd.DatetimeIndex([pd.datetime(y, m, d, h) for y, m, d, h in zip(df.index.year, df.index.month, df.index.day, df.hour)])
+        index = pd.DatetimeIndex([pd.datetime(y, m, d, h) for
+                                  y, m, d, h in
+                                  zip(df.index.year,
+                                      df.index.month,
+                                      df.index.day,
+                                      df.hour)])
 
     return index
+
 
 def distribute_equally(daily_data, divide=False):
     """Obtains hourly values by equally distributing the daily values.
@@ -64,13 +76,16 @@ def distribute_equally(daily_data, divide=False):
 
     return hourly_data
 
+
 def vapor_pressure(temp, hum):
     """
-    Calculates vapor pressure from temperature and humidity after Sonntag (1990).
+    Calculates vapor pressure from temperature and humidity after
+    Sonntag (1990).
 
     Args:
         temp: temperature values
-        hum: humidity value(s). Can be scalar (e.g. for calculating saturation vapor pressure).
+        hum: humidity value(s). Can be scalar (e.g. for calculating
+        saturation vapor pressure).
 
     Returns:
         Vapor pressure in hPa.
@@ -83,10 +98,17 @@ def vapor_pressure(temp, hum):
 
     positives = np.array(temp >= 273.15)
     vap_press = np.zeros(temp.shape) * np.nan
-    vap_press[positives] = 6.112 * np.exp((17.62 * (temp[positives] - 273.15)) / (243.12 + (temp[positives] - 273.15))) * hum[positives] / 100.
-    vap_press[~positives] = 6.112 * np.exp((22.46 * (temp[~positives] - 273.15)) / (272.62  + (temp[~positives] - 273.15))) * hum[~positives] / 100.
+    vap_press[positives] = (6.112 *
+                            np.exp((17.62 * (temp[positives] - 273.15)) /
+                                   (243.12 + (temp[positives] - 273.15))) *
+                            hum[positives] / 100.)
+    vap_press[~positives] = (6.112 *
+                             np.exp((22.46 * (temp[~positives] - 273.15)) /
+                                    (272.62 + (temp[~positives] - 273.15))) *
+                             hum[~positives] / 100.)
 
     return vap_press
+
 
 def dewpoint_temperature(temp, hum):
     """computes the dewpoint temperature
@@ -95,7 +117,7 @@ def dewpoint_temperature(temp, hum):
     ----
     temp :      temperature [K]
     hum :       relative humidity
-    
+
 
     Returns
         dewpoint temperature in K
@@ -106,10 +128,15 @@ def dewpoint_temperature(temp, hum):
 
     positives = np.array(temp >= 273.15)
     dewpoint_temp = temp.copy() * np.nan
-    dewpoint_temp[positives] = 243.12 * np.log(vap_press[positives] / 6.112) / (17.62 - np.log(vap_press[positives] / 6.112))
-    dewpoint_temp[~positives] = 272.62 * np.log(vap_press[~positives] / 6.112) / (22.46 - np.log(vap_press[~positives] / 6.112))
+    dewpoint_temp[positives] = (243.12 * np.log(vap_press[positives] / 6.112) /
+                                (17.62 - np.log(vap_press[positives] / 6.112)))
+    dewpoint_temp[~positives] = (272.62 * np.log(vap_press[~positives] /
+                                                 6.112) /
+                                 (22.46 - np.log(vap_press[~positives] /
+                                                 6.112)))
 
     return dewpoint_temp + 273.15
+
 
 def linregress(x, y, return_stats=False):
     """linear regression calculation
@@ -119,7 +146,7 @@ def linregress(x, y, return_stats=False):
     x :         independent variable (series)
     y :         dependent variable (series)
     return_stats : returns statistical values as well if required (bool)
-    
+
 
     Returns
     ----
@@ -133,6 +160,7 @@ def linregress(x, y, return_stats=False):
 
     return retval
 
+
 def get_sun_times(dates, lon, lat, time_zone):
     """Computes the times of sunrise, solar noon, and sunset for each day.
 
@@ -142,64 +170,68 @@ def get_sun_times(dates, lon, lat, time_zone):
     lat :       latitude in DecDeg
     lon :       longitude in DecDeg
     time_zone : timezone
-    
+
 
     Returns
     ----
     DataFrame:  [sunrise, sunnoon, sunset, day length] in dec hours
     """
 
-    df = pd.DataFrame(index=dates, columns=['sunrise', 'sunnoon', 'sunset', 'daylength'])
+    df = pd.DataFrame(index=dates,
+                      columns=['sunrise', 'sunnoon', 'sunset', 'daylength'])
 
-    doy = np.array([(d - d.replace(day=1, month=1)).days + 1 for d in df.index]) # day of year
+    doy = np.array([(d - d.replace(day=1, month=1)).days + 1 for
+                    d in df.index])  # day of year
 
     # Day angle and declination after Bourges (1985):
     day_angle_b = np.deg2rad((360. / 365.25) * (doy - 79.346))
-    
-    declination = np.deg2rad(
-        0.3723 + 23.2567 * np.sin(  day_angle_b) - 0.7580 * np.cos(  day_angle_b)
-            +  0.1149 * np.sin(2*day_angle_b) + 0.3656 * np.cos(2*day_angle_b)
-            -  0.1712 * np.sin(3*day_angle_b) + 0.0201 * np.cos(3*day_angle_b)
-            )
-    
+
+    declination = np.deg2rad(0.3723 +
+                             23.2567 * np.sin(day_angle_b) -
+                             0.7580 * np.cos(day_angle_b) +
+                             0.1149 * np.sin(2*day_angle_b) +
+                             0.3656 * np.cos(2*day_angle_b) -
+                             0.1712 * np.sin(3*day_angle_b) +
+                             0.0201 * np.cos(3*day_angle_b))
+
     # Equation of time with day angle after Spencer (1971):
     day_angle_s = 2 * np.pi * (doy - 1) / 365.
-    eq_time = 12. / np.pi * (
-        0.000075 +
-        0.001868 * np.cos(  day_angle_s) - 0.032077 * np.sin(  day_angle_s) -
-        0.014615 * np.cos(2*day_angle_s) - 0.040849 * np.sin(2*day_angle_s)
-        )
-    
+    eq_time = 12. / np.pi * (0.000075 +
+                             0.001868 * np.cos(day_angle_s) -
+                             0.032077 * np.sin(day_angle_s) -
+                             0.014615 * np.cos(2*day_angle_s) -
+                             0.040849 * np.sin(2*day_angle_s))
+
     #
     standard_meridian = time_zone * 15.
     delta_lat_time = (lon - standard_meridian) * 24. / 360.
-    
+
     omega_nul_arg = -np.tan(np.deg2rad(lat)) * np.tan(declination)
     omega_nul = np.arccos(omega_nul_arg)
-    sunrise  = 12. * (1. - (omega_nul) / np.pi) - delta_lat_time - eq_time
-    sunset   = 12. * (1. + (omega_nul) / np.pi) - delta_lat_time - eq_time
+    sunrise = 12. * (1. - (omega_nul) / np.pi) - delta_lat_time - eq_time
+    sunset = 12. * (1. + (omega_nul) / np.pi) - delta_lat_time - eq_time
 
     # as an approximation, solar noon is independent of the below mentioned
     # cases:
-    sunnoon  = 12. * (1.) - delta_lat_time - eq_time        
-    
+    sunnoon = 12. * (1.) - delta_lat_time - eq_time
+
     # $kf 2015-11-13: special case midnight sun and polar night
     # CASE 1: MIDNIGHT SUN
     # set sunrise and sunset to values that would yield the maximum day
     # length even though this a crude assumption
     pos = omega_nul_arg < -1
     sunrise[pos] = sunnoon[pos] - 12
-    sunset[pos]  = sunnoon[pos] + 12
+    sunset[pos] = sunnoon[pos] + 12
 
     # CASE 2: POLAR NIGHT
     # set sunrise and sunset to values that would yield the minmum day
     # length even though this a crude assumption
     pos = omega_nul_arg > 1
     sunrise[pos] = sunnoon[pos]
-    sunset[pos]  = sunnoon[pos]
+    sunset[pos] = sunnoon[pos]
 
     daylength = sunset - sunrise
-        
+
     # adjust if required
     sunrise[sunrise < 0] += 24
     sunset[sunset > 24] -= 24
@@ -211,12 +243,18 @@ def get_sun_times(dates, lon, lat, time_zone):
 
     return df
 
-def detect_gaps(dataframe, timestep, print_all=False, print_max=5, verbose=True):
-    """checks if a given dataframe contains gaps and returns the number of gaps
 
-    This funtion checks if a dataframe contains any gaps for a given temporal
-    resolution that needs to be specified in seconds. The number of gaps
-    detected in the dataframe is returned.
+def detect_gaps(dataframe,
+                timestep,
+                print_all=False,
+                print_max=5,
+                verbose=True):
+    """checks if a given dataframe contains gaps and returns the number
+    of gaps
+
+    This funtion checks if a dataframe contains any gaps for a given
+    temporal resolution that needs to be specified in seconds. The
+    number of gaps detected in the dataframe is returned.
 
     Args:
         dataframe: A pandas dataframe object with index defined as datetime
@@ -238,21 +276,29 @@ def detect_gaps(dataframe, timestep, print_all=False, print_max=5, verbose=True)
     except:
         print('Error: Invalid dataframe.')
         return -1
-    for i in range(0,n):
-        if(i > 0):
+    for i in range(0, n):
+        if i > 0:
             time_diff = dataframe.index[i] - dataframe.index[i-1]
-            if(time_diff.delta/1E9 != timestep):
+            if time_diff.delta/1E9 != timestep:
                 gcount += 1
-                if(print_all or (msg_counter <= print_max - 1)):
+                if (print_all or (msg_counter <= print_max - 1)):
                     if verbose:
-                        print('Warning: Gap in time series found between %s and %s' % (dataframe.index[i-1], dataframe.index[i]))
+                        print('Warning: Gap in time series found ' /
+                              'between %s and %s' % (dataframe.index[i-1],
+                                                     dataframe.index[i]))
                     msg_counter += 1
-                if(msg_counter == print_max and warning_printed == False and verbose):
-                    print('Waring: Only the first %i gaps have been listed. Try to increase print_max parameter to show more details.' % msg_counter)
+                if (msg_counter == print_max and
+                    warning_printed is False and
+                    verbose):
+                    print('Warning: Only the first %i gaps have been '
+                          'listed. Try to increase print_max '
+                          'parameter to show more details.' % msg_counter)
+
                     warning_printed = True
     if verbose:
         print('%i gaps found in total.' % (gcount))
     return gcount
+
 
 def drop_incomplete_days(dataframe, shift=0):
     """truncates a given dataframe to full days only
@@ -277,7 +323,7 @@ def drop_incomplete_days(dataframe, shift=0):
         print("Invalid shift parameter setting! Using defaults.")
         shift = 0
     first = shift
-    last  = first - 1
+    last = first - 1
     if last < 0:
         last += 24
     try:
@@ -286,11 +332,11 @@ def drop_incomplete_days(dataframe, shift=0):
     except:
         print('Error: Invalid dataframe.')
         return dataframe
-    
-    delete = list()  
-    
+
+    delete = list()
+
     # drop heading lines if required
-    for i in range(0,n):
+    for i in range(0, n):
         if dataframe.index.hour[i] == first and dataframe.index.minute[i] == 0:
             break
         else:
@@ -298,7 +344,7 @@ def drop_incomplete_days(dataframe, shift=0):
             dropped += 1
 
     # drop tailing lines if required
-    for i in range(n-1,0,-1):
+    for i in range(n-1, 0, -1):
         if dataframe.index.hour[i] == last and dataframe.index.minute[i] == 0:
             break
         else:
@@ -308,6 +354,7 @@ def drop_incomplete_days(dataframe, shift=0):
     # print(delete)
     return dataframe.drop(dataframe.index[[delete]])
 
+
 def prepare_interpolation_data(data_daily, column_hours):
     start_date = data_daily.index[0]
     end_date = data_daily.index[-1]
@@ -315,7 +362,9 @@ def prepare_interpolation_data(data_daily, column_hours):
     data = pd.Series()
 
     for column, hour in column_hours.items():
-        index = pd.DatetimeIndex(start=start_date.replace(hour=hour), end=end_date.replace(hour=hour), freq='D')
+        index = pd.DatetimeIndex(start=start_date.replace(hour=hour),
+                                 end=end_date.replace(hour=hour),
+                                 freq='D')
         s = pd.Series(index=index, data=data_daily[column].values)
         data = data.append(s)
 
@@ -323,6 +372,7 @@ def prepare_interpolation_data(data_daily, column_hours):
     data = data.reindex(hourly_index(data_daily.index))
 
     return data
+
 
 def daily_from_hourly(df):
     """Aggregates data (hourly to daily values) according to the characteristics
@@ -361,20 +411,22 @@ def daily_from_hourly(df):
         df_daily['wind'] = df.wind.resample('D').mean()
 
     if 'ssd' in df:
-        df_daily['ssd'] = df.ssd.resample('D').sum() / 60 # minutes to hours
+        df_daily['ssd'] = df.ssd.resample('D').sum() / 60  # minutes to hours
 
     df_daily.index.name = None
     return df_daily
 
 
 def calculate_mean_daily_course_by_month(data_hourly, normalize=False):
-    df = data_hourly.groupby([data_hourly.index.month, data_hourly.index.hour]).mean()
+    df = data_hourly.groupby([data_hourly.index.month,
+                              data_hourly.index.hour]).mean()
     df = df.reset_index().pivot('level_1', 'level_0')
-    df.columns = df.columns.droplevel() # remove MultiIndex
+    df.columns = df.columns.droplevel()  # remove MultiIndex
     df.columns.name = None
     df.index.name = None
 
     if normalize:
-        df = (df - df.min()) / (df.max() - df.min()) # normalize values to 0-1 range
+        df = (df - df.min()) / (df.max() - df.min())  # normalize values
+                                                      # to 0-1 range
 
     return df
