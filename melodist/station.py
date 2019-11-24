@@ -35,26 +35,29 @@ class Station(object):
     information such as metadata and meteorological time series (observed
     and disaggregated)
     """
+
     _columns_daily = [
-        'tmean',
-        'tmin',
-        'tmax',
-        'precip',
-        'glob',
-        'ssd',
-        'hum',
-        'wind',
+        "tmean",
+        "tmin",
+        "tmax",
+        "precip",
+        "glob",
+        "ssd",
+        "hum",
+        "wind",
     ]
 
     _columns_hourly = [
-        'temp',
-        'precip',
-        'glob',
-        'hum',
-        'wind',
+        "temp",
+        "precip",
+        "glob",
+        "hum",
+        "wind",
     ]
 
-    def __init__(self, id=None, name=None, lon=None, lat=None, timezone=None, data_daily=None):
+    def __init__(
+        self, id=None, name=None, lon=None, lat=None, timezone=None, data_daily=None
+    ):
         self._lon = None
         self._lat = None
         self._timezone = None
@@ -87,15 +90,19 @@ class Station(object):
         assert df.index.is_all_dates
         # for col in df:
         #     assert col in Station._columns_daily
-        assert df.index.resolution == 'day'
+        assert df.index.resolution == "day"
         assert df.index.is_monotonic_increasing
 
         if df.index.freq is None:  # likely some days are missing
-            df = df.reindex(pd.DatetimeIndex(start=df.index[0], end=df.index[-1], freq='D'))
+            df = df.reindex(
+                pd.DatetimeIndex(start=df.index[0], end=df.index[-1], freq="D")
+            )
 
-        for var in 'tmin', 'tmax', 'tmean':
+        for var in "tmin", "tmax", "tmean":
             if var in df:
-                assert not any(df[var] < 200), 'Implausible temperature values detected - temperatures must be in K'
+                assert not any(
+                    df[var] < 200
+                ), "Implausible temperature values detected - temperatures must be in K"
 
         self._data_daily = df.copy()
 
@@ -176,9 +183,11 @@ class Station(object):
         Computes the times of sunrise, solar noon, and sunset for each day.
         """
 
-        self.sun_times = melodist.util.get_sun_times(self.data_daily.index, self.lon, self.lat, self.timezone)
+        self.sun_times = melodist.util.get_sun_times(
+            self.data_daily.index, self.lon, self.lat, self.timezone
+        )
 
-    def disaggregate_wind(self, method='equal'):
+    def disaggregate_wind(self, method="equal"):
         """
         Disaggregate wind speed.
 
@@ -198,9 +207,11 @@ class Station(object):
                 Draws random numbers to distribute wind speed (usually not conserving the
                 daily average).
         """
-        self.data_disagg.wind = melodist.disaggregate_wind(self.data_daily.wind, method=method, **self.statistics.wind)
+        self.data_disagg.wind = melodist.disaggregate_wind(
+            self.data_daily.wind, method=method, **self.statistics.wind
+        )
 
-    def disaggregate_humidity(self, method='equal', preserve_daily_mean=False):
+    def disaggregate_humidity(self, method="equal", preserve_daily_mean=False):
         """
         Disaggregate relative humidity.
 
@@ -242,7 +253,9 @@ class Station(object):
             **self.statistics.hum
         )
 
-    def disaggregate_temperature(self, method='sine_min_max', min_max_time='fix', mod_nighttime=False):
+    def disaggregate_temperature(
+        self, method="sine_min_max", min_max_time="fix", mod_nighttime=False
+    ):
         """
         Disaggregate air temperature.
 
@@ -292,10 +305,12 @@ class Station(object):
             max_delta=self.statistics.temp.max_delta,
             mean_course=self.statistics.temp.mean_course,
             sun_times=self.sun_times,
-            mod_nighttime=mod_nighttime
+            mod_nighttime=mod_nighttime,
         )
 
-    def disaggregate_precipitation(self, method='equal', zerodiv='uniform', shift=0, master_precip=None):
+    def disaggregate_precipitation(
+        self, method="equal", zerodiv="uniform", shift=0, master_precip=None
+    ):
         """
         Disaggregate precipitation.
 
@@ -321,23 +336,36 @@ class Station(object):
             Hourly precipitation records from a representative station
             (required for ``method='masterstation'``).
         """
-        if method == 'equal':
-            precip_disagg = melodist.disagg_prec(self.data_daily, method=method, shift=shift)
-        elif method == 'cascade':
+        if method == "equal":
+            precip_disagg = melodist.disagg_prec(
+                self.data_daily, method=method, shift=shift
+            )
+        elif method == "cascade":
             precip_disagg = pd.Series(index=self.data_disagg.index)
 
-            for months, stats in zip(self.statistics.precip.months, self.statistics.precip.stats):
-                precip_daily = melodist.seasonal_subset(self.data_daily.precip, months=months)
+            for months, stats in zip(
+                self.statistics.precip.months, self.statistics.precip.stats
+            ):
+                precip_daily = melodist.seasonal_subset(
+                    self.data_daily.precip, months=months
+                )
                 if len(precip_daily) > 1:
-                    data = melodist.disagg_prec(precip_daily, method=method, cascade_options=stats,
-                                                shift=shift, zerodiv=zerodiv)
+                    data = melodist.disagg_prec(
+                        precip_daily,
+                        method=method,
+                        cascade_options=stats,
+                        shift=shift,
+                        zerodiv=zerodiv,
+                    )
                     precip_disagg.loc[data.index] = data
-        elif method == 'masterstation':
-            precip_disagg = melodist.precip_master_station(self.data_daily.precip, master_precip, zerodiv)
+        elif method == "masterstation":
+            precip_disagg = melodist.precip_master_station(
+                self.data_daily.precip, master_precip, zerodiv
+            )
 
         self.data_disagg.precip = precip_disagg
 
-    def disaggregate_radiation(self, method='pot_rad', pot_rad=None):
+    def disaggregate_radiation(self, method="pot_rad", pot_rad=None):
         """
         Disaggregate solar radiation.
 
@@ -367,8 +395,10 @@ class Station(object):
         if self.sun_times is None:
             self.calc_sun_times()
 
-        if pot_rad is None and method != 'mean_course':
-            pot_rad = melodist.potential_radiation(self.data_disagg.index, self.lon, self.lat, self.timezone)
+        if pot_rad is None and method != "mean_course":
+            pot_rad = melodist.potential_radiation(
+                self.data_disagg.index, self.lon, self.lat, self.timezone
+            )
 
         self.data_disagg.glob = melodist.disaggregate_radiation(
             self.data_daily,
@@ -379,10 +409,12 @@ class Station(object):
             angstr_b=self.statistics.glob.angstroem.b,
             bristcamp_a=self.statistics.glob.bristcamp.a,
             bristcamp_c=self.statistics.glob.bristcamp.c,
-            mean_course=self.statistics.glob.mean_course
+            mean_course=self.statistics.glob.mean_course,
         )
 
-    def interpolate(self, column_hours, method='linear', limit=24, limit_direction='both', **kwargs):
+    def interpolate(
+        self, column_hours, method="linear", limit=24, limit_direction="both", **kwargs
+    ):
         """
         Wrapper function for ``pandas.Series.interpolate`` that can be used to
         "disaggregate" values using various interpolation methods.
@@ -407,6 +439,8 @@ class Station(object):
         >>> mystation.data_hourly.temp = mystation.interpolate({'T7': 7, 'T14': 14, 'T19': 19}) # linear interpolation (default)
         >>> mystation.data_hourly.temp = mystation.interpolate({'T7': 7, 'T14': 14, 'T19': 19}, method='cubic') # cubic spline
         """
-        kwargs = dict(kwargs, method=method, limit=limit, limit_direction=limit_direction)
+        kwargs = dict(
+            kwargs, method=method, limit=limit, limit_direction=limit_direction
+        )
         data = melodist.util.prepare_interpolation_data(self.data_daily, column_hours)
         return data.interpolate(**kwargs)

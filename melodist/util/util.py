@@ -30,19 +30,25 @@ import scipy.stats
 
 
 def hourly_index(daily_index, fill_gaps=False):
-    index = pd.DatetimeIndex(start=daily_index.min(), end=daily_index.max().replace(hour=23), freq='H')
+    index = pd.DatetimeIndex(
+        start=daily_index.min(), end=daily_index.max().replace(hour=23), freq="H"
+    )
 
     # remove days that are not in the daily index:
     if not fill_gaps and len(index) > len(daily_index) * 24:
         df = pd.DataFrame(index=index.date, data=dict(hour=index.hour, keep=True))
         df.index = df.index.to_datetime()
         dropdates = list(set(index.date) - set(daily_index.date))
-        df.loc[dropdates, 'keep'] = False
+        df.loc[dropdates, "keep"] = False
         df = df[df.keep]
-        index = pd.DatetimeIndex([pd.datetime(y, m, d, h) for y, m, d, h in zip(df.index.year,
-                                                                                df.index.month,
-                                                                                df.index.day,
-                                                                                df.hour)])
+        index = pd.DatetimeIndex(
+            [
+                pd.datetime(y, m, d, h)
+                for y, m, d, h in zip(
+                    df.index.year, df.index.month, df.index.day, df.hour
+                )
+            ]
+        )
 
     return index
 
@@ -62,7 +68,8 @@ def distribute_equally(daily_data, divide=False):
     index = hourly_index(daily_data.index)
     hourly_data = daily_data.reindex(index)
     hourly_data = hourly_data.groupby(hourly_data.index.day).transform(
-        lambda x: x.fillna(method='ffill', limit=23))
+        lambda x: x.fillna(method="ffill", limit=23)
+    )
 
     if divide:
         hourly_data /= 24
@@ -85,12 +92,27 @@ def vapor_pressure(temp, hum):
     if np.isscalar(hum):
         hum = np.zeros(temp.shape) + hum
 
-    assert(temp.shape == hum.shape)
+    assert temp.shape == hum.shape
 
     positives = np.array(temp >= 273.15)
     vap_press = np.zeros(temp.shape) * np.nan
-    vap_press[positives] = 6.112 * np.exp((17.62 * (temp[positives] - 273.15)) / (243.12 + (temp[positives] - 273.15))) * hum[positives] / 100.
-    vap_press[~positives] = 6.112 * np.exp((22.46 * (temp[~positives] - 273.15)) / (272.62  + (temp[~positives] - 273.15))) * hum[~positives] / 100.
+    vap_press[positives] = (
+        6.112
+        * np.exp(
+            (17.62 * (temp[positives] - 273.15)) / (243.12 + (temp[positives] - 273.15))
+        )
+        * hum[positives]
+        / 100.0
+    )
+    vap_press[~positives] = (
+        6.112
+        * np.exp(
+            (22.46 * (temp[~positives] - 273.15))
+            / (272.62 + (temp[~positives] - 273.15))
+        )
+        * hum[~positives]
+        / 100.0
+    )
 
     return vap_press
 
@@ -107,14 +129,22 @@ def dewpoint_temperature(temp, hum):
     Returns
         dewpoint temperature in K
     """
-    assert(temp.shape == hum.shape)
+    assert temp.shape == hum.shape
 
     vap_press = vapor_pressure(temp, hum)
 
     positives = np.array(temp >= 273.15)
     dewpoint_temp = temp.copy() * np.nan
-    dewpoint_temp[positives] = 243.12 * np.log(vap_press[positives] / 6.112) / (17.62 - np.log(vap_press[positives] / 6.112))
-    dewpoint_temp[~positives] = 272.62 * np.log(vap_press[~positives] / 6.112) / (22.46 - np.log(vap_press[~positives] / 6.112))
+    dewpoint_temp[positives] = (
+        243.12
+        * np.log(vap_press[positives] / 6.112)
+        / (17.62 - np.log(vap_press[positives] / 6.112))
+    )
+    dewpoint_temp[~positives] = (
+        272.62
+        * np.log(vap_press[~positives] / 6.112)
+        / (22.46 - np.log(vap_press[~positives] / 6.112))
+    )
 
     return dewpoint_temp + 273.15
 
@@ -158,57 +188,71 @@ def get_sun_times(dates, lon, lat, time_zone):
     DataFrame:  [sunrise, sunnoon, sunset, day length] in dec hours
     """
 
-    df = pd.DataFrame(index=dates, columns=['sunrise', 'sunnoon', 'sunset', 'daylength'])
+    df = pd.DataFrame(
+        index=dates, columns=["sunrise", "sunnoon", "sunset", "daylength"]
+    )
 
-    doy = np.array([(d - d.replace(day=1, month=1)).days + 1 for d in df.index])  # day of year
+    doy = np.array(
+        [(d - d.replace(day=1, month=1)).days + 1 for d in df.index]
+    )  # day of year
 
     # Day angle and declination after Bourges (1985):
-    day_angle_b = np.deg2rad((360. / 365.25) * (doy - 79.346))
-    
+    day_angle_b = np.deg2rad((360.0 / 365.25) * (doy - 79.346))
+
     declination = np.deg2rad(
-        0.3723 + 23.2567 * np.sin(day_angle_b) - 0.7580 * np.cos(day_angle_b)
-        + 0.1149 * np.sin(2*day_angle_b) + 0.3656 * np.cos(2*day_angle_b)
-        - 0.1712 * np.sin(3*day_angle_b) + 0.0201 * np.cos(3*day_angle_b)
+        0.3723
+        + 23.2567 * np.sin(day_angle_b)
+        - 0.7580 * np.cos(day_angle_b)
+        + 0.1149 * np.sin(2 * day_angle_b)
+        + 0.3656 * np.cos(2 * day_angle_b)
+        - 0.1712 * np.sin(3 * day_angle_b)
+        + 0.0201 * np.cos(3 * day_angle_b)
     )
-    
+
     # Equation of time with day angle after Spencer (1971):
-    day_angle_s = 2 * np.pi * (doy - 1) / 365.
-    eq_time = 12. / np.pi * (
-        0.000075 +
-        0.001868 * np.cos(  day_angle_s) - 0.032077 * np.sin(  day_angle_s) -
-        0.014615 * np.cos(2*day_angle_s) - 0.040849 * np.sin(2*day_angle_s)
+    day_angle_s = 2 * np.pi * (doy - 1) / 365.0
+    eq_time = (
+        12.0
+        / np.pi
+        * (
+            0.000075
+            + 0.001868 * np.cos(day_angle_s)
+            - 0.032077 * np.sin(day_angle_s)
+            - 0.014615 * np.cos(2 * day_angle_s)
+            - 0.040849 * np.sin(2 * day_angle_s)
         )
-    
+    )
+
     #
-    standard_meridian = time_zone * 15.
-    delta_lat_time = (lon - standard_meridian) * 24. / 360.
-    
+    standard_meridian = time_zone * 15.0
+    delta_lat_time = (lon - standard_meridian) * 24.0 / 360.0
+
     omega_nul_arg = -np.tan(np.deg2rad(lat)) * np.tan(declination)
     omega_nul = np.arccos(omega_nul_arg)
-    sunrise = 12. * (1. - (omega_nul) / np.pi) - delta_lat_time - eq_time
-    sunset  = 12. * (1. + (omega_nul) / np.pi) - delta_lat_time - eq_time
+    sunrise = 12.0 * (1.0 - (omega_nul) / np.pi) - delta_lat_time - eq_time
+    sunset = 12.0 * (1.0 + (omega_nul) / np.pi) - delta_lat_time - eq_time
 
     # as an approximation, solar noon is independent of the below mentioned
     # cases:
-    sunnoon  = 12. * (1.) - delta_lat_time - eq_time
-    
+    sunnoon = 12.0 * (1.0) - delta_lat_time - eq_time
+
     # $kf 2015-11-13: special case midnight sun and polar night
     # CASE 1: MIDNIGHT SUN
     # set sunrise and sunset to values that would yield the maximum day
     # length even though this a crude assumption
     pos = omega_nul_arg < -1
     sunrise[pos] = sunnoon[pos] - 12
-    sunset[pos]  = sunnoon[pos] + 12
+    sunset[pos] = sunnoon[pos] + 12
 
     # CASE 2: POLAR NIGHT
     # set sunrise and sunset to values that would yield the minmum day
     # length even though this a crude assumption
     pos = omega_nul_arg > 1
     sunrise[pos] = sunnoon[pos]
-    sunset[pos]  = sunnoon[pos]
+    sunset[pos] = sunnoon[pos]
 
     daylength = sunset - sunrise
-        
+
     # adjust if required
     sunrise[sunrise < 0] += 24
     sunset[sunset > 24] -= 24
@@ -246,22 +290,28 @@ def detect_gaps(dataframe, timestep, print_all=False, print_max=5, verbose=True)
     try:
         n = len(dataframe.index)
     except:
-        print('Error: Invalid dataframe.')
+        print("Error: Invalid dataframe.")
         return -1
     for i in range(0, n):
-        if(i > 0):
-            time_diff = dataframe.index[i] - dataframe.index[i-1]
-            if(time_diff.delta/1E9 != timestep):
+        if i > 0:
+            time_diff = dataframe.index[i] - dataframe.index[i - 1]
+            if time_diff.delta / 1e9 != timestep:
                 gcount += 1
                 if print_all or (msg_counter <= print_max - 1):
                     if verbose:
-                        print('Warning: Gap in time series found between %s and %s' % (dataframe.index[i-1], dataframe.index[i]))
+                        print(
+                            "Warning: Gap in time series found between %s and %s"
+                            % (dataframe.index[i - 1], dataframe.index[i])
+                        )
                     msg_counter += 1
                 if msg_counter == print_max and verbose and not warning_printed:
-                    print('Waring: Only the first %i gaps have been listed. Try to increase print_max parameter to show more details.' % msg_counter)
+                    print(
+                        "Waring: Only the first %i gaps have been listed. Try to increase print_max parameter to show more details."
+                        % msg_counter
+                    )
                     warning_printed = True
     if verbose:
-        print('%i gaps found in total.' % (gcount))
+        print("%i gaps found in total." % (gcount))
     return gcount
 
 
@@ -295,11 +345,11 @@ def drop_incomplete_days(dataframe, shift=0):
         # todo: move this checks to a separate function
         n = len(dataframe.index)
     except:
-        print('Error: Invalid dataframe.')
+        print("Error: Invalid dataframe.")
         return dataframe
-    
-    delete = list()  
-    
+
+    delete = list()
+
     # drop heading lines if required
     for i in range(0, n):
         if dataframe.index.hour[i] == first and dataframe.index.minute[i] == 0:
@@ -309,7 +359,7 @@ def drop_incomplete_days(dataframe, shift=0):
             dropped += 1
 
     # drop tailing lines if required
-    for i in range(n-1, 0, -1):
+    for i in range(n - 1, 0, -1):
         if dataframe.index.hour[i] == last and dataframe.index.minute[i] == 0:
             break
         else:
@@ -327,7 +377,11 @@ def prepare_interpolation_data(data_daily, column_hours):
     data = pd.Series()
 
     for column, hour in column_hours.items():
-        index = pd.DatetimeIndex(start=start_date.replace(hour=hour), end=end_date.replace(hour=hour), freq='D')
+        index = pd.DatetimeIndex(
+            start=start_date.replace(hour=hour),
+            end=end_date.replace(hour=hour),
+            freq="D",
+        )
         s = pd.Series(index=index, data=data_daily[column].values)
         data = data.append(s)
 
@@ -350,31 +404,31 @@ def daily_from_hourly(df):
 
     df_daily = pd.DataFrame()
 
-    if 'temp' in df:
-        df_daily['temp'] = df.temp.resample('D').mean()
-        df_daily['tmin'] = df.temp.groupby(df.temp.index.date).min()
-        df_daily['tmax'] = df.temp.groupby(df.temp.index.date).max()
+    if "temp" in df:
+        df_daily["temp"] = df.temp.resample("D").mean()
+        df_daily["tmin"] = df.temp.groupby(df.temp.index.date).min()
+        df_daily["tmax"] = df.temp.groupby(df.temp.index.date).max()
 
-    if 'precip' in df:
-        df_daily['precip'] = df.precip.resample('D').sum()
+    if "precip" in df:
+        df_daily["precip"] = df.precip.resample("D").sum()
 
-    if 'glob' in df:
-        df_daily['glob'] = df.glob.resample('D').mean()
+    if "glob" in df:
+        df_daily["glob"] = df.glob.resample("D").mean()
 
-    if 'hum' in df:
-        df_daily['hum'] = df.hum.resample('D').mean()
+    if "hum" in df:
+        df_daily["hum"] = df.hum.resample("D").mean()
 
-    if 'hum' in df:
-        df_daily['hum_min'] = df.hum.groupby(df.hum.index.date).min()
+    if "hum" in df:
+        df_daily["hum_min"] = df.hum.groupby(df.hum.index.date).min()
 
-    if 'hum' in df:
-        df_daily['hum_max'] = df.hum.groupby(df.hum.index.date).max()
+    if "hum" in df:
+        df_daily["hum_max"] = df.hum.groupby(df.hum.index.date).max()
 
-    if 'wind' in df:
-        df_daily['wind'] = df.wind.resample('D').mean()
+    if "wind" in df:
+        df_daily["wind"] = df.wind.resample("D").mean()
 
-    if 'ssd' in df:
-        df_daily['ssd'] = df.ssd.resample('D').sum() / 60  # minutes to hours
+    if "ssd" in df:
+        df_daily["ssd"] = df.ssd.resample("D").sum() / 60  # minutes to hours
 
     df_daily.index.name = None
     return df_daily
@@ -385,7 +439,7 @@ def calculate_mean_daily_course_by_month(data_hourly, normalize=False):
     data_hourly.index.name = None
 
     df = data_hourly.groupby([data_hourly.index.month, data_hourly.index.hour]).mean()
-    df = df.reset_index().pivot('level_1', 'level_0')
+    df = df.reset_index().pivot("level_1", "level_0")
     df.columns = df.columns.droplevel()  # remove MultiIndex
     df.columns.name = None
     df.index.name = None

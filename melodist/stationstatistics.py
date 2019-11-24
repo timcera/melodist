@@ -38,6 +38,7 @@ class StationStatistics(object):
     generally associated to a Station object for which this infomration
     is valid.
     """
+
     def __init__(self, data=None, lon=None, lat=None, timezone=None):
         self._data = None
         self._lon = lon
@@ -52,15 +53,17 @@ class StationStatistics(object):
         self.hum = Bunch(a0=None, a1=None, kr=None, month_hour_precip_mean=None)
         self.temp = Bunch(max_delta=None, mean_course=None)
 
-        angstroem_df = pd.DataFrame(index=np.arange(12) + 1, columns=['a', 'b'])
+        angstroem_df = pd.DataFrame(index=np.arange(12) + 1, columns=["a", "b"])
         angstroem_df.a = 0.25
         angstroem_df.b = 0.75
 
-        bristcamp_df = pd.DataFrame(index=np.arange(12) + 1, columns=['a', 'c'])
+        bristcamp_df = pd.DataFrame(index=np.arange(12) + 1, columns=["a", "c"])
         bristcamp_df.a = 0.75
         bristcamp_df.c = 2.4
 
-        self.glob = Bunch(angstroem=angstroem_df, bristcamp=bristcamp_df, mean_course=None)
+        self.glob = Bunch(
+            angstroem=angstroem_df, bristcamp=bristcamp_df, mean_course=None
+        )
 
     @property
     def data(self):
@@ -70,7 +73,7 @@ class StationStatistics(object):
     def data(self, df):
         assert isinstance(df, pd.DataFrame)
         assert df.index.is_all_dates
-        assert df.index.resolution == 'hour'
+        assert df.index.resolution == "hour"
 
         self._data = df.copy()
 
@@ -89,7 +92,9 @@ class StationStatistics(object):
             months = [np.arange(12) + 1]
 
         self.precip.months = months
-        self.precip.stats = melodist.build_casc(self.data, months=months, avg_stats=avg_stats, percentile=percentile)
+        self.precip.stats = melodist.build_casc(
+            self.data, months=months, avg_stats=avg_stats, percentile=percentile
+        )
 
     def calc_wind_stats(self):
         """
@@ -106,16 +111,22 @@ class StationStatistics(object):
         self.hum.update(a0=a0, a1=a1)
         self.hum.kr = 12
 
-        self.hum.month_hour_precip_mean = melodist.calculate_month_hour_precip_mean(self.data)
+        self.hum.month_hour_precip_mean = melodist.calculate_month_hour_precip_mean(
+            self.data
+        )
 
     def calc_temperature_stats(self):
         """
         Calculates statistics in order to derive diurnal patterns of temperature
         """
-        self.temp.max_delta = melodist.get_shift_by_data(self.data.temp, self._lon, self._lat, self._timezone)
-        self.temp.mean_course = melodist.util.calculate_mean_daily_course_by_month(self.data.temp, normalize=True)
+        self.temp.max_delta = melodist.get_shift_by_data(
+            self.data.temp, self._lon, self._lat, self._timezone
+        )
+        self.temp.mean_course = melodist.util.calculate_mean_daily_course_by_month(
+            self.data.temp, normalize=True
+        )
 
-    def calc_radiation_stats(self, data_daily=None, day_length=None, how='all'):
+    def calc_radiation_stats(self, data_daily=None, day_length=None, how="all"):
         """
         Calculates statistics in order to derive solar radiation from sunshine duration or
         minimum/maximum temperature.
@@ -128,22 +139,27 @@ class StationStatistics(object):
         day_length : Series, optional
             Day lengths as calculated by ``calc_sun_times``.
         """
-        assert how in ('all', 'seasonal', 'monthly')
+        assert how in ("all", "seasonal", "monthly")
 
-        self.glob.mean_course = melodist.util.calculate_mean_daily_course_by_month(self.data.glob)
+        self.glob.mean_course = melodist.util.calculate_mean_daily_course_by_month(
+            self.data.glob
+        )
 
         if data_daily is not None:
             pot_rad = melodist.potential_radiation(
                 melodist.util.hourly_index(data_daily.index),
-                self._lon, self._lat, self._timezone)
-            pot_rad_daily = pot_rad.resample('D').mean()
-            obs_rad_daily = self.data.glob.resample('D').mean()
+                self._lon,
+                self._lat,
+                self._timezone,
+            )
+            pot_rad_daily = pot_rad.resample("D").mean()
+            obs_rad_daily = self.data.glob.resample("D").mean()
 
-            if how == 'all':
+            if how == "all":
                 month_ranges = [np.arange(12) + 1]
-            elif how == 'seasonal':
+            elif how == "seasonal":
                 month_ranges = [[3, 4, 5], [6, 7, 8], [9, 10, 11], [12, 1, 2]]
-            elif how == 'monthly':
+            elif how == "monthly":
                 month_ranges = zip(np.arange(12) + 1)
 
             def myisin(s, v):
@@ -152,7 +168,7 @@ class StationStatistics(object):
             def extract_months(s, months):
                 return s[myisin(s.index.month, months)]
 
-            if 'ssd' in data_daily and day_length is not None:
+            if "ssd" in data_daily and day_length is not None:
                 for months in month_ranges:
                     a, b = melodist.fit_angstroem_params(
                         extract_months(data_daily.ssd, months),
@@ -164,7 +180,7 @@ class StationStatistics(object):
                     for month in months:
                         self.glob.angstroem.loc[month] = a, b
 
-            if 'tmin' in data_daily and 'tmax' in data_daily:
+            if "tmin" in data_daily and "tmax" in data_daily:
                 df = pd.DataFrame(
                     data=dict(
                         tmin=data_daily.tmin,
@@ -172,7 +188,7 @@ class StationStatistics(object):
                         pot_rad=pot_rad_daily,
                         obs_rad=obs_rad_daily,
                     )
-                ).dropna(how='any')
+                ).dropna(how="any")
 
                 for months in month_ranges:
                     a, c = melodist.fit_bristow_campbell_params(
@@ -193,25 +209,26 @@ class StationStatistics(object):
         ----------
         filename:    output file that holds statistics data
         """
+
         def json_encoder(obj):
             if isinstance(obj, pd.DataFrame) or isinstance(obj, pd.Series):
                 if isinstance(obj.index, pd.core.index.MultiIndex):
                     obj = obj.reset_index()  # convert MultiIndex to columns
 
-                return json.loads(obj.to_json(date_format='iso'))
+                return json.loads(obj.to_json(date_format="iso"))
             elif isinstance(obj, melodist.cascade.CascadeStatistics):
                 return obj.__dict__
             elif isinstance(obj, np.ndarray):
                 return obj.tolist()
             else:
-                raise TypeError('%s not supported' % type(obj))
+                raise TypeError("%s not supported" % type(obj))
 
         d = dict(
             temp=self.temp,
             wind=self.wind,
             precip=self.precip,
             hum=self.hum,
-            glob=self.glob
+            glob=self.glob,
         )
 
         j = json.dumps(d, default=json_encoder, indent=4)
@@ -219,7 +236,7 @@ class StationStatistics(object):
         if filename is None:
             return j
         else:
-            with open(filename, 'w') as f:
+            with open(filename, "w") as f:
                 f.write(j)
 
     @classmethod
@@ -231,8 +248,11 @@ class StationStatistics(object):
         ----------
         filename:    input file that holds statistics data
         """
+
         def json_decoder(d):
-            if 'p01' in d and 'pxx' in d:  # we assume this is a CascadeStatistics object
+            if (
+                "p01" in d and "pxx" in d
+            ):  # we assume this is a CascadeStatistics object
                 return melodist.cascade.CascadeStatistics.from_dict(d)
 
             return d
@@ -242,27 +262,35 @@ class StationStatistics(object):
 
         stats = cls()
 
-        stats.temp.update(d['temp'])
-        stats.hum.update(d['hum'])
-        stats.precip.update(d['precip'])
-        stats.wind.update(d['wind'])
-        stats.glob.update(d['glob'])
+        stats.temp.update(d["temp"])
+        stats.hum.update(d["hum"])
+        stats.precip.update(d["precip"])
+        stats.wind.update(d["wind"])
+        stats.glob.update(d["glob"])
 
         if stats.temp.max_delta is not None:
-            stats.temp.max_delta = pd.read_json(json.dumps(stats.temp.max_delta), typ='series').sort_index()
+            stats.temp.max_delta = pd.read_json(
+                json.dumps(stats.temp.max_delta), typ="series"
+            ).sort_index()
 
         if stats.temp.mean_course is not None:
-            mc = pd.read_json(json.dumps(stats.temp.mean_course), typ='frame').sort_index()[np.arange(1, 12 + 1)]
+            mc = pd.read_json(
+                json.dumps(stats.temp.mean_course), typ="frame"
+            ).sort_index()[np.arange(1, 12 + 1)]
             stats.temp.mean_course = mc.sort_index()[np.arange(1, 12 + 1)]
 
         if stats.hum.month_hour_precip_mean is not None:
-            mhpm = pd.read_json(json.dumps(stats.hum.month_hour_precip_mean), typ='frame').sort_index()
-            mhpm = mhpm.set_index(['level_0', 'level_1', 'level_2'])  # convert to MultiIndex
+            mhpm = pd.read_json(
+                json.dumps(stats.hum.month_hour_precip_mean), typ="frame"
+            ).sort_index()
+            mhpm = mhpm.set_index(
+                ["level_0", "level_1", "level_2"]
+            )  # convert to MultiIndex
             mhpm = mhpm.squeeze()  # convert to Series
             mhpm = mhpm.rename_axis([None, None, None])  # remove index labels
             stats.hum.month_hour_precip_mean = mhpm
 
-        for var in ('angstroem', 'bristcamp', 'mean_course'):
+        for var in ("angstroem", "bristcamp", "mean_course"):
             if stats.glob[var] is not None:
                 stats.glob[var] = pd.read_json(json.dumps(stats.glob[var])).sort_index()
 

@@ -12,42 +12,27 @@ pandas package. In this way, input and output data can be easily prepared and
 processed."""
 
 setup(
-    name='melodist',
-
-    version='0.1.3',
-
-    description='MELODIST: MEteoroLOgical observation time series DISaggregation Tool',
+    name="melodist",
+    version="0.1.3",
+    description="MELODIST: MEteoroLOgical observation time series DISaggregation Tool",
     long_description=long_description,
-
-    url='https://github.com/kristianfoerster/melodist',
-
-    author='Kristian Förster, Florian Hanzer, Benjamin Winter, Thomas Marke, Siling Chen',
-    author_email='foerster@iww.uni-hannover.de',
-
-    license='GPLv3',
-
+    url="https://github.com/kristianfoerster/melodist",
+    author="Kristian Förster, Florian Hanzer, Benjamin Winter, Thomas Marke, Siling Chen",
+    author_email="foerster@iww.uni-hannover.de",
+    license="GPLv3",
     classifiers=[
-        'Development Status :: 4 - Beta',
-
-        'Intended Audience :: Science/Research',
-        'Topic :: Scientific/Engineering :: Atmospheric Science',
-
-        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
-
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
+        "Development Status :: 4 - Beta",
+        "Intended Audience :: Science/Research",
+        "Topic :: Scientific/Engineering :: Atmospheric Science",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+        "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
     ],
-
-    packages=find_packages(exclude=['docs']),
-
-    install_requires=[
-        'numpy',
-        'scipy',
-        'pandas>=0.18.0',
-    ],
+    packages=find_packages(exclude=["docs"]),
+    install_requires=["numpy", "scipy", "pandas>=0.18.0",],
 )
