@@ -25,7 +25,7 @@
 
 from __future__ import print_function, division, absolute_import
 import melodist
-import melodist.util
+from .util import util as melodist_util
 import numpy as np
 import pandas as pd
 
@@ -61,7 +61,7 @@ def disaggregate_temperature(
     ):
         raise ValueError("Invalid option")
 
-    temp_disagg = pd.Series(index=melodist.util.hourly_index(data_daily.index))
+    temp_disagg = pd.Series(index=melodist_util.hourly_index(data_daily.index))
 
     if method in ("sine_min_max", "sine_mean", "sine"):
         # for this option assume time of minimum and maximum and fit cosine function through minimum and maximum temperatures
@@ -86,6 +86,7 @@ def disaggregate_temperature(
                 "max_val_next",
                 "mean_val_cur",
             ],
+            dtype=pd.np.int64,
         )
 
         if min_max_time == "fix":
@@ -181,7 +182,7 @@ def disaggregate_temperature(
         if polars.sum() > 0:
             # during polar night, no diurnal variation of temperature is applied
             # instead the daily average calculated using tmin and tmax is applied
-            polars_index_hourly = melodist.util.hourly_index(polars[polars].index)
+            polars_index_hourly = melodist_util.hourly_index(polars[polars].index)
             temp_disagg.loc[polars_index_hourly] = np.nan
 
             avg_before = (locdf_day.min_val_before + locdf_day.max_val_before) / 2.0
@@ -240,7 +241,7 @@ def disaggregate_temperature(
                 add_days = polar_to_normal_days.union(normal_to_polar_days)
 
                 temp_polars = temp_polars.append(
-                    temp_disagg[melodist.util.hourly_index(add_days)]
+                    temp_disagg[melodist_util.hourly_index(add_days)]
                 ).sort_index()
 
                 for day in polar_to_normal_days:
@@ -292,18 +293,18 @@ def disaggregate_temperature(
     return temp_disagg
 
 
-def get_shift_by_data(temp_hourly, lon, lat, time_zone):
+def get_shift_by_data(temp_hourly, lon, lat, timezone):
     """function to get max temp shift (monthly) by hourly data
-    
+
     Parameters
     ----
-    hourly_data_obs : observed hourly data 
+    hourly_data_obs : observed hourly data
     lat :             latitude in DezDeg
     lon :             longitude in DezDeg
-    time_zone:        timezone
+    timezone:        timezone
     """
     daily_index = temp_hourly.resample("D").mean().index
-    sun_times = melodist.util.get_sun_times(daily_index, lon, lat, time_zone)
+    sun_times = melodist_util.get_sun_times(daily_index, lon, lat, timezone)
 
     idxmax = temp_hourly.groupby(temp_hourly.index.date).idxmax()
     idxmax.index = pd.to_datetime(idxmax.index)

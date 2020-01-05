@@ -38,7 +38,7 @@ def _cosine_function(x, a, b, t_shift):
         a: parameter a for the cosine function
         b: parameter b for the cosine function
         t_shift: parameter t_shift for the cosine function
-        
+
     Returns:
         series including diurnal course of windspeed.
     """
@@ -56,7 +56,7 @@ def disaggregate_wind(wind_daily, method="equal", a=None, b=None, t_shift=None):
         a: parameter a for the cosine function
         b: parameter b for the cosine function
         t_shift: parameter t_shift for the cosine function
-        
+
     Returns:
         Disaggregated hourly values of windspeed.
     """
@@ -82,7 +82,7 @@ def fit_cosine_function(wind):
 
     Args:
         wind: observed hourly windspeed data
-        
+
     Returns:
         parameters needed to generate diurnal features of windspeed using a cosine function
     """

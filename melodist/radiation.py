@@ -24,7 +24,7 @@
 ###############################################################################################################
 
 from __future__ import print_function, division, absolute_import
-import melodist.util
+from .util import util as melodist_util
 import pandas as pd
 import numpy as np
 import scipy.optimize
@@ -55,7 +55,7 @@ def disaggregate_radiation(
         angstr_a: parameter a of the Angstrom model (intercept)
         angstr_b: parameter b of the Angstrom model (slope)
         mean_course: monthly values of the mean hourly radiation course
-        
+
     Returns:
         Disaggregated hourly values of shortwave radiation.
     """
@@ -63,7 +63,7 @@ def disaggregate_radiation(
     if method not in ("pot_rad", "pot_rad_via_ssd", "pot_rad_via_bc", "mean_course"):
         raise ValueError("Invalid option")
 
-    glob_disagg = pd.Series(index=melodist.util.hourly_index(data_daily.index))
+    glob_disagg = pd.Series(index=melodist_util.hourly_index(data_daily.index))
 
     if method == "mean_course":
         assert mean_course is not None
@@ -112,7 +112,7 @@ def potential_radiation(
     dates,
     lon,
     lat,
-    timezone,
+    timezone=None,
     terrain_slope=0,
     terrain_slope_azimuth=0,
     cloud_fraction=0,
@@ -137,8 +137,8 @@ def potential_radiation(
         Longitude (degrees)
     lat : float
         Latitude (degrees)
-    timezone : float
-        Time zone
+    timezone : float, default None
+        Time zone, if default is None will calculate from `lon`
     terrain_slope : float, default 0
         Terrain slope as defined in Liston & Elder (2006) (eq. 12)
     terrain_slope_azimuth : float, default 0
@@ -165,7 +165,10 @@ def potential_radiation(
     )
 
     # compute the sun hour angle in rad
-    standard_meridian = timezone * 15.0
+    if timezone is None:
+        standard_meridian = round(lon / 15.0) * 15
+    else:
+        standard_meridian = timezone * 15.0
     delta_lat_time = (lon - standard_meridian) * 24.0 / 360.0
     hour_angle = np.pi * (
         ((dates_hour + dates_minute / 60.0 + delta_lat_time) / 12.0) - 1.0

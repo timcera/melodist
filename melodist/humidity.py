@@ -25,7 +25,7 @@
 
 from __future__ import print_function, division, absolute_import
 import melodist
-import melodist.util.util as util
+from .util import util as melodist_util
 import numpy as np
 import pandas as pd
 
@@ -90,8 +90,8 @@ def disaggregate_humidity(
             # be (T_dp,day)_(d+1) - (T_dp,day)_d instead of the other way around)
             tdew += temp.index.hour / 24.0 * (tdew_nextday - tdew) + tdew_delta
 
-        sat_vap_press_tdew = util.vapor_pressure(tdew, 100)
-        sat_vap_press_t = util.vapor_pressure(temp, 100)
+        sat_vap_press_tdew = melodist_util.vapor_pressure(tdew, 100)
+        sat_vap_press_t = melodist_util.vapor_pressure(temp, 100)
         hum_disagg = pd.Series(
             index=temp.index, data=100 * sat_vap_press_tdew / sat_vap_press_t
         )
@@ -122,7 +122,7 @@ def disaggregate_humidity(
         daily_mean_df = pd.DataFrame(
             data=dict(obs=data_daily.hum, disagg=hum_disagg.resample("D").mean())
         )
-        bias = melodist.util.distribute_equally(
+        bias = melodist_util.distribute_equally(
             daily_mean_df.disagg - daily_mean_df.obs
         )
         bias = bias.fillna(0)
@@ -135,14 +135,14 @@ def calculate_dewpoint_regression(hourly_data_obs, return_stats=False):
     temphum = hourly_data_obs[["temp", "hum"]]
 
     tdew = (
-        melodist.util.dewpoint_temperature(temphum.temp, temphum.hum)
+        melodist_util.dewpoint_temperature(temphum.temp, temphum.hum)
         .resample("D")
         .mean()
     )
     tmin = temphum.temp.groupby(temphum.index.date).min()
     df = pd.DataFrame(data=dict(tmin=tmin, tdew=tdew)).dropna(how="any")
 
-    return util.linregress(df.tmin, df.tdew, return_stats=return_stats)
+    return melodist_util.linregress(df.tmin, df.tdew, return_stats=return_stats)
 
 
 def calculate_month_hour_precip_mean(hourly_data_obs):

@@ -4,7 +4,6 @@
 # series DISaggregation Tool a program to disaggregate daily values    #
 # of meteorological variables to hourly values                         #
 #                                                                      #
-#                                                                      #
 # Copyright (C) 2016  Florian Hanzer (1, 2), Kristian Förster (1, 2),  #
 # Benjamin Winter (1, 2), Thomas Marke (1)                             #
 #                                                                      #
@@ -37,7 +36,7 @@ import pandas as pd
 
 import copy
 import melodist
-import melodist.util
+from .util import util as melodist_util
 
 from . import cascade
 
@@ -94,7 +93,7 @@ def disagg_prec_cascade(
     precip_daily : pd.Series
         daily data
     hourly: Boolean (for an hourly resolution disaggregation)
-        if False, then returns 5-min disaggregated precipitation 
+        if False, then returns 5-min disaggregated precipitation
         (disaggregation level depending on the "level" variable)
     cascade_options : cascade object
         including statistical parameters for the cascade model
@@ -318,7 +317,7 @@ def disagg_prec_cascade(
                 vdn[i - 1] = vdn_025cs[(i * 4) - 1] - vdn_025cs[(i * 4) - 5]
 
         disagg_precip = pd.Series(
-            index=melodist.util.hourly_index(precip_daily.index), data=vdn
+            index=melodist_util.hourly_index(precip_daily.index), data=vdn
         )
 
     else:
@@ -404,10 +403,10 @@ def precip_master_station(precip_daily, master_precip_hourly, zerodiv):
         distribution
     """
 
-    precip_hourly = pd.Series(index=melodist.util.hourly_index(precip_daily.index))
+    precip_hourly = pd.Series(index=melodist_util.hourly_index(precip_daily.index))
 
     # set some parameters for cosine function
-    for index_d, precip in precip_daily.iteritems():
+    for index_d, precip in list(precip_daily.items()):
 
         # get hourly data of the day
         index = index_d.date().isoformat()
@@ -438,7 +437,7 @@ def aggregate_precipitation(vec_data, hourly=True, percentile=50):
     Parameters
     ----------
     vec_data : pd.Series
-        hourly (hourly=True) OR 5-min values 
+        hourly (hourly=True) OR 5-min values
 
     Returns
     -------
@@ -669,7 +668,7 @@ def build_casc(
     ObsData : pd.Series
         hourly=True -> hourly obs data
         else -> 5min data (disaggregation level=9 (default), 10, 11)
-    
+
     months : numpy array of ints
         Months for each seasons to be used for statistics (array of
         numpy array, default=1-12, e.g., [np.arange(12) + 1])

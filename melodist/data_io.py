@@ -123,7 +123,7 @@ def read_dwd(filename, metadata, mode="d", skip_last=True):
 
     Parameters
     ----
-    filename : DWD file to read (full path) / list of hourly files (RR+TU+FF) 
+    filename : DWD file to read (full path) / list of hourly files (RR+TU+FF)
     metadata : corresponding DWD metadata file to read
     mode :    "d" for daily and "h" for hourly input
     skip_last : boolen, skips last line due to file format
@@ -207,7 +207,7 @@ def read_dwd(filename, metadata, mode="d", skip_last=True):
         # rename to dissag definition
         data = data.rename(columns=dict_d)
         # get colums which are not defined
-        drop = [col for col in data.columns if col not in dict_d.values()]
+        drop = [col for col in data.columns if col not in list(dict_d.values())]
         # delete columns
         data = data.drop(drop, axis=1)
 
@@ -313,7 +313,7 @@ def write_smet(filename, data, metadata, nodata_value=-999, mode="h", check_nan=
         f.write("SMET 1.1 ASCII\n")
         f.write("[HEADER]\n")
 
-        for k, v in metadata.items():
+        for k, v in list(metadata.items()):
             f.write("{} = {}\n".format(k, v))
 
         # data

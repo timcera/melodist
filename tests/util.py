@@ -18,7 +18,7 @@ def setup_station():
     df_hourly = df_hourly.loc["2016-01-01":"2016-12-31"]
     df_hourly.temp += 273.15
 
-    df_daily = melodist.util.daily_from_hourly(df_hourly)
+    df_daily = melodist.util.util.daily_from_hourly(df_hourly)
 
     station = melodist.Station(lon=8.86, lat=51.00, timezone=1, data_daily=df_daily)
     station.statistics = melodist.StationStatistics(data=df_hourly)

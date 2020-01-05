@@ -25,13 +25,13 @@
 
 from __future__ import print_function, division, absolute_import
 import melodist
-import melodist.util
+from .util import util as melodist_util
 import pandas as pd
 
 
 class Station(object):
     """
-    Class representing meteorological stations including all relevant 
+    Class representing meteorological stations including all relevant
     information such as metadata and meteorological time series (observed
     and disaggregated)
     """
@@ -71,6 +71,8 @@ class Station(object):
         self.lon = lon
         self.lat = lat
         self.timezone = timezone
+        if timezone is None and lon is not None:
+            self.timezone = round(lon / 15.0)
         self.sun_times = None
 
         if data_daily is not None:
@@ -107,7 +109,7 @@ class Station(object):
         self._data_daily = df.copy()
 
         # create data frame for disaggregated data:
-        index = melodist.util.hourly_index(df.index)
+        index = melodist_util.hourly_index(df.index)
         df = pd.DataFrame(index=index, columns=Station._columns_hourly, dtype=float)
         self._data_disagg = df
 
@@ -142,7 +144,7 @@ class Station(object):
     def timezone(self):
         """
         Timezone indicates the differnce in hours calculated from UTC
-        
+
         Negative values indicate timezones later than UTC, i.e. west of 0 deg
         long. Positive values indicate the reverse.
         """
@@ -183,7 +185,7 @@ class Station(object):
         Computes the times of sunrise, solar noon, and sunset for each day.
         """
 
-        self.sun_times = melodist.util.get_sun_times(
+        self.sun_times = melodist_util.get_sun_times(
             self.data_daily.index, self.lon, self.lat, self.timezone
         )
 
@@ -442,5 +444,5 @@ class Station(object):
         kwargs = dict(
             kwargs, method=method, limit=limit, limit_direction=limit_direction
         )
-        data = melodist.util.prepare_interpolation_data(self.data_daily, column_hours)
+        data = melodist_util.prepare_interpolation_data(self.data_daily, column_hours)
         return data.interpolate(**kwargs)

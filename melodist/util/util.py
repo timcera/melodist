@@ -124,7 +124,7 @@ def dewpoint_temperature(temp, hum):
     ----
     temp :      temperature [K]
     hum :       relative humidity
-    
+
 
     Returns
         dewpoint temperature in K
@@ -157,7 +157,7 @@ def linregress(x, y, return_stats=False):
     x :         independent variable (series)
     y :         dependent variable (series)
     return_stats : returns statistical values as well if required (bool)
-    
+
 
     Returns
     ----
@@ -172,7 +172,7 @@ def linregress(x, y, return_stats=False):
     return retval
 
 
-def get_sun_times(dates, lon, lat, time_zone):
+def get_sun_times(dates, lon, lat, timezone=None):
     """Computes the times of sunrise, solar noon, and sunset for each day.
 
     Parameters
@@ -180,8 +180,8 @@ def get_sun_times(dates, lon, lat, time_zone):
     dates:      datetime
     lat :       latitude in DecDeg
     lon :       longitude in DecDeg
-    time_zone : timezone
-    
+    timezone : timezone
+
 
     Returns
     ----
@@ -224,7 +224,10 @@ def get_sun_times(dates, lon, lat, time_zone):
     )
 
     #
-    standard_meridian = time_zone * 15.0
+    if timezone is None:
+        standard_meridian = timezone * 15.0
+    else:
+        standard_meridian = round(lon / 15.0) * 15.0
     delta_lat_time = (lon - standard_meridian) * 24.0 / 360.0
 
     omega_nul_arg = -np.tan(np.deg2rad(lat)) * np.tan(declination)
@@ -376,7 +379,7 @@ def prepare_interpolation_data(data_daily, column_hours):
 
     data = pd.Series()
 
-    for column, hour in column_hours.items():
+    for column, hour in list(column_hours.items()):
         index = pd.DatetimeIndex(
             start=start_date.replace(hour=hour),
             end=end_date.replace(hour=hour),

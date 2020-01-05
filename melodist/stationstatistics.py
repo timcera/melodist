@@ -25,7 +25,8 @@
 
 from __future__ import print_function, division, absolute_import
 import melodist
-from melodist.util.bunch import Bunch
+from .util.bunch import Bunch
+from .util import util as melodist_util
 import json
 import numpy as np
 import pandas as pd
@@ -44,6 +45,8 @@ class StationStatistics(object):
         self._lon = lon
         self._lat = lat
         self._timezone = timezone
+        if timezone is None and lon is not None:
+            self._timezone = round(lon / 15.0)
 
         if data is not None:
             self.data = data
@@ -86,7 +89,7 @@ class StationStatistics(object):
         months :        Months for each seasons to be used for statistics (array of numpy array, default=1-12, e.g., [np.arange(12) + 1])
         avg_stats :     average statistics for all levels True/False (default=True)
         percentile :    percentil for splitting the dataset in small and high intensities (default=50)
-        
+
         """
         if months is None:
             months = [np.arange(12) + 1]
@@ -122,7 +125,7 @@ class StationStatistics(object):
         self.temp.max_delta = melodist.get_shift_by_data(
             self.data.temp, self._lon, self._lat, self._timezone
         )
-        self.temp.mean_course = melodist.util.calculate_mean_daily_course_by_month(
+        self.temp.mean_course = melodist_util.calculate_mean_daily_course_by_month(
             self.data.temp, normalize=True
         )
 
@@ -141,13 +144,13 @@ class StationStatistics(object):
         """
         assert how in ("all", "seasonal", "monthly")
 
-        self.glob.mean_course = melodist.util.calculate_mean_daily_course_by_month(
+        self.glob.mean_course = melodist_util.calculate_mean_daily_course_by_month(
             self.data.glob
         )
 
         if data_daily is not None:
             pot_rad = melodist.potential_radiation(
-                melodist.util.hourly_index(data_daily.index),
+                melodist_util.hourly_index(data_daily.index),
                 self._lon,
                 self._lat,
                 self._timezone,
@@ -160,7 +163,7 @@ class StationStatistics(object):
             elif how == "seasonal":
                 month_ranges = [[3, 4, 5], [6, 7, 8], [9, 10, 11], [12, 1, 2]]
             elif how == "monthly":
-                month_ranges = zip(np.arange(12) + 1)
+                month_ranges = list(zip(np.arange(12) + 1))
 
             def myisin(s, v):
                 return pd.Series(s).isin(v).values
