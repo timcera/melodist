@@ -1,33 +1,35 @@
 # -*- coding: utf-8 -*-
-###############################################################################################################
-# This file is part of MELODIST - MEteoroLOgical observation time series DISaggregation Tool                  #
-# a program to disaggregate daily values of meteorological variables to hourly values                         #
-#                                                                                                             #
-# Copyright (C) 2016  Florian Hanzer (1,2), Kristian Förster (1,2), Benjamin Winter (1,2), Thomas Marke (1)   #
-#                                                                                                             #
-# (1) Institute of Geography, University of Innsbruck, Austria                                                #
-# (2) alpS - Centre for Climate Change Adaptation, Innsbruck, Austria                                         #
-#                                                                                                             #
-# MELODIST is free software: you can redistribute it and/or modify                                            #
-# it under the terms of the GNU General Public License as published by                                        #
-# the Free Software Foundation, either version 3 of the License, or                                           #
-# (at your option) any later version.                                                                         #
-#                                                                                                             #
-# MELODIST is distributed in the hope that it will be useful,                                                 #
-# but WITHOUT ANY WARRANTY; without even the implied warranty of                                              #
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                                                #
-# GNU General Public License for more details.                                                                #
-#                                                                                                             #
-# You should have received a copy of the GNU General Public License                                           #
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.                                       #
-#                                                                                                             #
-###############################################################################################################
+########################################################################
+# This file is part of MELODIST - MEteoroLOgical observation time      #
+# series DISaggregation Tool a program to disaggregate daily values    #
+# of meteorological variables to hourly values                         #
+#                                                                      #
+# Copyright (C) 2016  Florian Hanzer (1, 2), Kristian Förster (1, 2),  #
+# Benjamin Winter (1, 2), Thomas Marke (1)                             #
+#                                                                      #
+# (1) Institute of Geography, University of Innsbruck, Austria         #
+# (2) alpS - Centre for Climate Change Adaptation, Innsbruck, Austria  #
+#                                                                      #
+# MELODIST is free software: you can redistribute it and/or modify     #
+# it under the terms of the GNU General Public License as published by #
+# the Free Software Foundation, either version 3 of the License, or    #
+# (at your option) any later version.                                  #
+#                                                                      #
+# MELODIST is distributed in the hope that it will be useful,          #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of       #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the         #
+# GNU General Public License for more details.                         #
+#                                                                      #
+# You should have received a copy of the GNU General Public License    #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.#
+#                                                                      #
+########################################################################
 
 from __future__ import print_function, division, absolute_import
-import melodist
-from .util import util as melodist_util
+
 import numpy as np
 import pandas as pd
+from .util import util as melodist_util
 
 
 def disaggregate_temperature(
@@ -47,8 +49,10 @@ def disaggregate_temperature(
     method :          method to disaggregate
     min_max_time:     "fix" - min/max temperature at fixed times 7h/14h,
                       "sun_loc" - min/max calculated by sunrise/sunnoon + 2h,
-                      "sun_loc_shift" - min/max calculated by sunrise/sunnoon + monthly mean shift,
-    max_delta:        maximum monthly temperature shift as returned by get_shift_by_data()
+                      "sun_loc_shift" - min/max calculated by sunrise/sunnoon +
+                                        monthly mean shift,
+    max_delta:        maximum monthly temperature shift as returned by
+                      get_shift_by_data()
     sun_times:        times of sunrise/noon as returned by get_sun_times()
     """
 
@@ -64,7 +68,8 @@ def disaggregate_temperature(
     temp_disagg = pd.Series(index=melodist_util.hourly_index(data_daily.index))
 
     if method in ("sine_min_max", "sine_mean", "sine"):
-        # for this option assume time of minimum and maximum and fit cosine function through minimum and maximum temperatures
+        # for this option assume time of minimum and maximum and fit
+        # cosine function through minimum and maximum temperatures
         hours_per_day = 24
         default_shift_hours = 2
 
@@ -95,16 +100,24 @@ def disaggregate_temperature(
             locdf.max_loc = 14
         elif min_max_time == "sun_loc":
             # take location for minimum and maximum by sunrise / sunnoon + 2h
-            locdf.min_loc = sun_times.sunrise.round()  # sun rise round to full hour
+
+            # sun rise round to nearest hour
+            locdf.min_loc = sun_times.sunrise.round()
             locdf.max_loc = (
                 sun_times.sunnoon.round() + default_shift_hours
             )  # sun noon round to full hour + fix 2h
         elif min_max_time == "sun_loc_shift":
-            # take location for minimum and maximum by sunrise / sunnoon + monthly delta
-            locdf.min_loc = sun_times.sunrise.round()  # sun rise round to full hour
+            # take location for minimum and maximum by sunrise / sunnoon
+            # + monthly delta
+
+            # sun rise round to nearest hour
+            locdf.min_loc = sun_times.sunrise.round()
+
+            # sun noon + shift derived from observed hourly data, round
+            # to full hour
             locdf.max_loc = (
                 sun_times.sunnoon + max_delta[locdf.index.month].values
-            ).round()  # sun noon + shift derived from observed hourly data, round to full hour
+            ).round()
 
             pos = locdf.min_loc > locdf.max_loc
             locdf.loc[pos, "max_loc"] = (
@@ -129,13 +142,17 @@ def disaggregate_temperature(
         locdf_day = locdf
         locdf = locdf.reindex(temp_disagg.index, method="ffill")
 
-        # whenever we are before the maximum for the current day, use minimum value of current day for cosine function fitting
-        # once we have passed the maximum value use the minimum for next day to ensure smooth transitions
+        # whenever we are before the maximum for the current day, use
+        # minimum value of current day for cosine function fitting once
+        # we have passed the maximum value use the minimum for next day
+        # to ensure smooth transitions
         min_val = locdf.min_val_next.copy()
         min_val[min_val.index.hour < locdf.max_loc] = locdf.min_val_cur
 
-        # whenever we are before the minimum for the current day, use maximum value of day before for cosine function fitting
-        # once we have passed the minimum value use the maximum for the current day to ensure smooth transitions
+        # whenever we are before the minimum for the current day, use
+        # maximum value of day before for cosine function fitting once
+        # we have passed the minimum value use the maximum for the
+        # current day to ensure smooth transitions
         max_val = locdf.max_val_cur.copy()
         max_val[max_val.index.hour < locdf.min_loc] = locdf.max_val_before
 
@@ -180,8 +197,9 @@ def disaggregate_temperature(
 
         polars = sun_times.daylength < daylength_thres
         if polars.sum() > 0:
-            # during polar night, no diurnal variation of temperature is applied
-            # instead the daily average calculated using tmin and tmax is applied
+            # during polar night, no diurnal variation of temperature is
+            # applied instead the daily average calculated using tmin
+            # and tmax is applied
             polars_index_hourly = melodist_util.hourly_index(polars[polars].index)
             temp_disagg.loc[polars_index_hourly] = np.nan
 
@@ -229,9 +247,9 @@ def disaggregate_temperature(
             ].values
 
             temp_polars = temp_disagg.loc[polars_index_hourly].copy()
-            transition_days = polars[polars.diff() == True].astype(
-                int
-            )  # 0 where transition from polar to "normal" mode, 1 where transition from normal to polar
+            # 0 where transition from polar to "normal" mode, 1 where
+            # transition from normal to polar
+            transition_days = polars[polars.diff()].astype(int)
 
             if len(transition_days) > 0:
                 polar_to_normal_days = transition_days.index[transition_days == 0]

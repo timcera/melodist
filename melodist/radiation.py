@@ -1,27 +1,29 @@
 # -*- coding: utf-8 -*-
-###############################################################################################################
-# This file is part of MELODIST - MEteoroLOgical observation time series DISaggregation Tool                  #
-# a program to disaggregate daily values of meteorological variables to hourly values                         #
-#                                                                                                             #
-# Copyright (C) 2016  Florian Hanzer (1,2), Kristian Förster (1,2), Benjamin Winter (1,2), Thomas Marke (1)   #
-#                                                                                                             #
-# (1) Institute of Geography, University of Innsbruck, Austria                                                #
-# (2) alpS - Centre for Climate Change Adaptation, Innsbruck, Austria                                         #
-#                                                                                                             #
-# MELODIST is free software: you can redistribute it and/or modify                                            #
-# it under the terms of the GNU General Public License as published by                                        #
-# the Free Software Foundation, either version 3 of the License, or                                           #
-# (at your option) any later version.                                                                         #
-#                                                                                                             #
-# MELODIST is distributed in the hope that it will be useful,                                                 #
-# but WITHOUT ANY WARRANTY; without even the implied warranty of                                              #
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                                                #
-# GNU General Public License for more details.                                                                #
-#                                                                                                             #
-# You should have received a copy of the GNU General Public License                                           #
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.                                       #
-#                                                                                                             #
-###############################################################################################################
+########################################################################
+# This file is part of MELODIST - MEteoroLOgical observation time      #
+# series DISaggregation Tool a program to disaggregate daily values    #
+# of meteorological variables to hourly values                         #
+#                                                                      #
+# Copyright (C) 2016  Florian Hanzer (1, 2), Kristian Förster (1, 2),  #
+# Benjamin Winter (1, 2), Thomas Marke (1)                             #
+#                                                                      #
+# (1) Institute of Geography, University of Innsbruck, Austria         #
+# (2) alpS - Centre for Climate Change Adaptation, Innsbruck, Austria  #
+#                                                                      #
+# MELODIST is free software: you can redistribute it and/or modify     #
+# it under the terms of the GNU General Public License as published by #
+# the Free Software Foundation, either version 3 of the License, or    #
+# (at your option) any later version.                                  #
+#                                                                      #
+# MELODIST is distributed in the hope that it will be useful,          #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of       #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the         #
+# GNU General Public License for more details.                         #
+#                                                                      #
+# You should have received a copy of the GNU General Public License    #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.#
+#                                                                      #
+########################################################################
 
 from __future__ import print_function, division, absolute_import
 from .util import util as melodist_util
@@ -30,7 +32,8 @@ import numpy as np
 import scipy.optimize
 
 """
-This routine diaggregates daily values of global radiation data to hourly values
+This routine disaggregates daily values of global radiation data to
+hourly values.
 """
 
 
@@ -49,7 +52,8 @@ def disaggregate_radiation(
 
     Args:
         daily_data: daily values
-        sun_times: daily dataframe including results of the util.sun_times function
+        sun_times: daily dataframe including results of the util.sun_times
+                   function
         pot_rad: hourly dataframe including potential radiation
         method: keyword specifying the disaggregation method to be used
         angstr_a: parameter a of the Angstrom model (intercept)
@@ -121,13 +125,15 @@ def potential_radiation(
     """
     Calculate potential shortwave radiation for a specific location and time.
 
-    This routine calculates global radiation as described in:
-    Liston, G. E. and Elder, K. (2006): A Meteorological Distribution System for
-    High-Resolution Terrestrial Modeling (MicroMet), J. Hydrometeorol., 7, 217–234.
+    This routine calculates global radiation as described in: Liston, G.
+    E. and Elder, K. (2006): A Meteorological Distribution System for
+    High-Resolution Terrestrial Modeling (MicroMet), J. Hydrometeorol.,
+    7, 217–234.
 
-    Corrections for eccentricity are carried out following:
-    Paltridge, G.W., Platt, C.M.R., 1976. Radiative processes in Meteorology and Climatology.
-    Elsevier Scientific Publishing Company, Amsterdam, Oxford, New York.
+    Corrections for eccentricity are carried out following: Paltridge,
+    G.W., Platt, C.M.R., 1976. Radiative processes in Meteorology and
+    Climatology.  Elsevier Scientific Publishing Company, Amsterdam,
+    Oxford, New York.
 
     Parameters
     ----------
@@ -181,7 +187,8 @@ def potential_radiation(
     cos_solar_zenith = cos_solar_zenith.clip(min=0)
     solar_zenith_angle = np.arccos(cos_solar_zenith)
 
-    # compute transmissivities for direct and diffus radiation using cloud fraction
+    # compute transmissivities for direct and diffuse radiation using
+    # cloud fraction
     transmissivity_direct = (0.6 + 0.2 * cos_solar_zenith) * (1.0 - cloud_fraction)
     transmissivity_diffuse = (0.3 + 0.1 * cos_solar_zenith) * cloud_fraction
 
@@ -221,7 +228,8 @@ def potential_radiation(
 
 
 def bristow_campbell(tmin, tmax, pot_rad_daily, A, C):
-    """calculates potential shortwave radiation based on minimum and maximum temperature
+    """calculates potential shortwave radiation based on minimum and
+    maximum temperature
 
     This routine calculates global radiation as described in:
     Bristow, Keith L., and Gaylon S. Campbell: On the relationship between
@@ -229,7 +237,8 @@ def bristow_campbell(tmin, tmax, pot_rad_daily, A, C):
     Agricultural and forest meteorology 31.2 (1984): 159-166.
 
     Args:
-        daily_data: time series (daily data) including at least minimum and maximum temeprature
+        daily_data: time series (daily data) including at least minimum
+                    and maximum temeprature
         pot_rad_daily: mean potential daily radiation
         A: parameter A of the Bristow-Campbell model
         C: parameter C of the Bristow-Campbell model
@@ -268,9 +277,9 @@ def bristow_campbell(tmin, tmax, pot_rad_daily, A, C):
 
 def fit_bristow_campbell_params(tmin, tmax, pot_rad_daily, obs_rad_daily):
     """
-    Fit the A and C parameters for the Bristow & Campbell (1984) model using observed daily
-    minimum and maximum temperature and mean daily (e.g. aggregated from hourly values) solar
-    radiation.
+    Fit the A and C parameters for the Bristow & Campbell (1984) model
+    using observed daily minimum and maximum temperature and mean daily
+    (e.g. aggregated from hourly values) solar radiation.
 
     Parameters
     ----------
@@ -304,7 +313,8 @@ def fit_bristow_campbell_params(tmin, tmax, pot_rad_daily, obs_rad_daily):
 
 def angstroem(ssd, day_length, pot_rad_daily, a, b):
     """
-    Calculate mean daily radiation from observed sunshine duration according to Angstroem (1924).
+    Calculate mean daily radiation from observed sunshine duration
+    according to Angstroem (1924).
 
     Parameters
     ----------
@@ -335,9 +345,9 @@ def angstroem(ssd, day_length, pot_rad_daily, a, b):
 
 def fit_angstroem_params(ssd, day_length, pot_rad_daily, obs_rad_daily):
     """
-    Fit the a and b parameters for the Angstroem (1924) model using observed daily
-    sunshine duration and mean daily (e.g. aggregated from hourly values) solar
-    radiation.
+    Fit the a and b parameters for the Angstroem (1924) model using
+    observed daily sunshine duration and mean daily (e.g. aggregated
+    from hourly values) solar radiation.
 
     Parameters
     ----------
