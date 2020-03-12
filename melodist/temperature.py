@@ -29,7 +29,8 @@ from __future__ import print_function, division, absolute_import
 
 import numpy as np
 import pandas as pd
-from .util import util as melodist_util
+from .util.util import hourly_index
+from .util.util import get_sun_times
 
 
 def disaggregate_temperature(
@@ -65,7 +66,7 @@ def disaggregate_temperature(
     ):
         raise ValueError("Invalid option")
 
-    temp_disagg = pd.Series(index=melodist_util.hourly_index(data_daily.index))
+    temp_disagg = pd.Series(index=hourly_index(data_daily.index))
 
     if method in ("sine_min_max", "sine_mean", "sine"):
         # for this option assume time of minimum and maximum and fit
@@ -200,7 +201,7 @@ def disaggregate_temperature(
             # during polar night, no diurnal variation of temperature is
             # applied instead the daily average calculated using tmin
             # and tmax is applied
-            polars_index_hourly = melodist_util.hourly_index(polars[polars].index)
+            polars_index_hourly = hourly_index(polars[polars].index)
             temp_disagg.loc[polars_index_hourly] = np.nan
 
             avg_before = (locdf_day.min_val_before + locdf_day.max_val_before) / 2.0
@@ -259,7 +260,7 @@ def disaggregate_temperature(
                 add_days = polar_to_normal_days.union(normal_to_polar_days)
 
                 temp_polars = temp_polars.append(
-                    temp_disagg[melodist_util.hourly_index(add_days)]
+                    temp_disagg[hourly_index(add_days)]
                 ).sort_index()
 
                 for day in polar_to_normal_days:
@@ -322,7 +323,7 @@ def get_shift_by_data(temp_hourly, lon, lat, timezone):
     timezone:        timezone
     """
     daily_index = temp_hourly.resample("D").mean().index
-    sun_times = melodist_util.get_sun_times(daily_index, lon, lat, timezone)
+    sun_times = get_sun_times(daily_index, lon, lat, timezone)
 
     idxmax = temp_hourly.groupby(temp_hourly.index.date).idxmax()
     idxmax.index = pd.to_datetime(idxmax.index)

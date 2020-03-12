@@ -26,7 +26,8 @@
 ########################################################################
 
 from __future__ import print_function, division, absolute_import
-from .util import util as melodist_util
+
+from .util.util import hourly_index
 import pandas as pd
 import numpy as np
 import scipy.optimize
@@ -67,7 +68,7 @@ def disaggregate_radiation(
     if method not in ("pot_rad", "pot_rad_via_ssd", "pot_rad_via_bc", "mean_course"):
         raise ValueError("Invalid option")
 
-    glob_disagg = pd.Series(index=melodist_util.hourly_index(data_daily.index))
+    glob_disagg = pd.Series(index=hourly_index(data_daily.index))
 
     if method == "mean_course":
         assert mean_course is not None

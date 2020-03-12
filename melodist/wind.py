@@ -24,10 +24,12 @@
 ###############################################################################################################
 
 from __future__ import print_function, division, absolute_import
-import melodist
+
 import numpy as np
 import pandas as pd
 import scipy.optimize
+
+from .util.util import distribute_equally
 
 
 def _cosine_function(x, a, b, t_shift):
@@ -62,7 +64,7 @@ def disaggregate_wind(wind_daily, method="equal", a=None, b=None, t_shift=None):
     """
     assert method in ("equal", "cosine", "random"), "Invalid method"
 
-    wind_eq = melodist.distribute_equally(wind_daily)
+    wind_eq = distribute_equally(wind_daily)
 
     if method == "equal":
         wind_disagg = wind_eq

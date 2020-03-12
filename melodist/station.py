@@ -24,9 +24,13 @@
 ###############################################################################################################
 
 from __future__ import print_function, division, absolute_import
-import melodist
-from .util import util as melodist_util
+
 import pandas as pd
+
+from .. import melodist
+from .util.util import hourly_index
+from .util.util import get_sun_times
+from .util.util import prepare_interpolation_data
 
 
 class Station(object):
@@ -109,7 +113,7 @@ class Station(object):
         self._data_daily = df.copy()
 
         # create data frame for disaggregated data:
-        index = melodist_util.hourly_index(df.index)
+        index = hourly_index(df.index)
         df = pd.DataFrame(index=index, columns=Station._columns_hourly, dtype=float)
         self._data_disagg = df
 
@@ -185,7 +189,7 @@ class Station(object):
         Computes the times of sunrise, solar noon, and sunset for each day.
         """
 
-        self.sun_times = melodist_util.get_sun_times(
+        self.sun_times = get_sun_times(
             self.data_daily.index, self.lon, self.lat, self.timezone
         )
 
@@ -444,5 +448,5 @@ class Station(object):
         kwargs = dict(
             kwargs, method=method, limit=limit, limit_direction=limit_direction
         )
-        data = melodist_util.prepare_interpolation_data(self.data_daily, column_hours)
+        data = prepare_interpolation_data(self.data_daily, column_hours)
         return data.interpolate(**kwargs)

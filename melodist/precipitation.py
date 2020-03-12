@@ -31,14 +31,14 @@
 
 from __future__ import print_function, division, absolute_import
 
+import copy
+
 import numpy as np
 import pandas as pd
 
-import copy
-import melodist
-from .util import util as melodist_util
-
 from . import cascade
+from .util.util import distribute_equally
+from .util.util import hourly_index
 
 
 def disagg_prec(
@@ -73,7 +73,7 @@ def disagg_prec(
         raise ValueError("Invalid option")
 
     if method == "equal":
-        precip_disagg = melodist.distribute_equally(dailyData.precip, divide=True)
+        precip_disagg = distribute_equally(dailyData.precip, divide=True)
     elif method == "masterstation":
         precip_disagg = precip_master_station(dailyData, hourly_data_obs, zerodiv)
     elif method == "cascade":
@@ -119,7 +119,7 @@ def disagg_prec_cascade(
     # statistics for branching into two bins
     wxxcum = np.zeros((7, 2, 4))
 
-    if isinstance(cascade_options, melodist.cascade.CascadeStatistics):
+    if isinstance(cascade_options, cascade.CascadeStatistics):
         # this is the standard case considering one data set for all levels
         # get cumulative probabilities for branching
         overwrite_stats = False
@@ -316,9 +316,7 @@ def disagg_prec_cascade(
                 # >1 (starting with 2-1 = 1 item)
                 vdn[i - 1] = vdn_025cs[(i * 4) - 1] - vdn_025cs[(i * 4) - 5]
 
-        disagg_precip = pd.Series(
-            index=melodist_util.hourly_index(precip_daily.index), data=vdn
-        )
+        disagg_precip = pd.Series(index=hourly_index(precip_daily.index), data=vdn)
 
     else:
         precip_sn = pd.Series(
@@ -403,7 +401,7 @@ def precip_master_station(precip_daily, master_precip_hourly, zerodiv):
         distribution
     """
 
-    precip_hourly = pd.Series(index=melodist_util.hourly_index(precip_daily.index))
+    precip_hourly = pd.Series(index=hourly_index(precip_daily.index))
 
     # set some parameters for cosine function
     for index_d, precip in list(precip_daily.items()):
@@ -695,7 +693,7 @@ def build_casc(
         if len(ObsData.precip[np.isnan(ObsData.precip)]) > 0:
             ObsData.precip[np.isnan(ObsData.precip)] = 0
 
-        casc_opt = melodist.cascade.CascadeStatistics()
+        casc_opt = cascade.CascadeStatistics()
         casc_opt.percentile = percentile
         list_casc_opt = list()
 

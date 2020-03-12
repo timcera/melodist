@@ -24,9 +24,11 @@
 ###############################################################################################################
 
 from __future__ import print_function, division, absolute_import
-import melodist
+
+from .. import melodist
 from .util.bunch import Bunch
-from .util import util as melodist_util
+from .util import util as hourly_index
+from .util.util import calculate_mean_daily_course_by_month
 import json
 import numpy as np
 import pandas as pd
@@ -125,7 +127,7 @@ class StationStatistics(object):
         self.temp.max_delta = melodist.get_shift_by_data(
             self.data.temp, self._lon, self._lat, self._timezone
         )
-        self.temp.mean_course = melodist_util.calculate_mean_daily_course_by_month(
+        self.temp.mean_course = calculate_mean_daily_course_by_month(
             self.data.temp, normalize=True
         )
 
@@ -144,16 +146,11 @@ class StationStatistics(object):
         """
         assert how in ("all", "seasonal", "monthly")
 
-        self.glob.mean_course = melodist_util.calculate_mean_daily_course_by_month(
-            self.data.glob
-        )
+        self.glob.mean_course = calculate_mean_daily_course_by_month(self.data.glob)
 
         if data_daily is not None:
             pot_rad = melodist.potential_radiation(
-                melodist_util.hourly_index(data_daily.index),
-                self._lon,
-                self._lat,
-                self._timezone,
+                hourly_index(data_daily.index), self._lon, self._lat, self._timezone,
             )
             pot_rad_daily = pot_rad.resample("D").mean()
             obs_rad_daily = self.data.glob.resample("D").mean()
