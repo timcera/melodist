@@ -101,7 +101,7 @@ class Station(object):
 
         if df.index.freq is None:  # likely some days are missing
             df = df.reindex(
-                pd.DatetimeIndex(start=df.index[0], end=df.index[-1], freq="D")
+                pd.date_range(start=df.index[0], end=df.index[-1], freq="D")
             )
 
         for var in "tmin", "tmax", "tmean":

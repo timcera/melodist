@@ -251,7 +251,7 @@ def bristow_campbell(tmin, tmax, pot_rad_daily, A, C):
 
     temp = pd.DataFrame(data=dict(tmin=tmin, tmax=tmax))
     temp = temp.reindex(
-        pd.DatetimeIndex(start=temp.index[0], end=temp.index[-1], freq="D")
+        pd.date_range(start=temp.index[0], end=temp.index[-1], freq="D")
     )
     temp["tmin_nextday"] = temp.tmin
     temp.tmin_nextday.iloc[:-1] = temp.tmin.iloc[1:].values

@@ -24,13 +24,14 @@
 ###############################################################################################################
 
 from __future__ import print_function, division, absolute_import
+
 import numpy as np
 import pandas as pd
 import scipy.stats
 
 
 def hourly_index(daily_index, fill_gaps=False):
-    index = pd.DatetimeIndex(
+    index = pd.date_range(
         start=daily_index.min(), end=daily_index.max().replace(hour=23), freq="H"
     )
 
@@ -380,7 +381,7 @@ def prepare_interpolation_data(data_daily, column_hours):
     data = pd.Series()
 
     for column, hour in list(column_hours.items()):
-        index = pd.DatetimeIndex(
+        index = pd.date_range(
             start=start_date.replace(hour=hour),
             end=end_date.replace(hour=hour),
             freq="D",
