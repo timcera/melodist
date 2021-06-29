@@ -118,7 +118,7 @@ def disaggregate_humidity(
         precip_equal = distribute_equally(
             data_daily.precip
         )  # daily precipitation equally distributed to hourly values
-        hum_disagg = pd.Series(index=precip_equal.index)
+        hum_disagg = pd.Series(index=precip_equal.index, dtype=float)
         locs = list(
             zip(hum_disagg.index.month, hum_disagg.index.hour, precip_equal > 0)
         )
