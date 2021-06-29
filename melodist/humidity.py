@@ -23,14 +23,17 @@
 #                                                                                                             #
 ###############################################################################################################
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
 
 import numpy as np
 import pandas as pd
-from .util.util import distribute_equally
-from .util.util import vapor_pressure
-from .util.util import dewpoint_temperature
-from .util.util import linregress
+
+from .util.util import (
+    dewpoint_temperature,
+    distribute_equally,
+    linregress,
+    vapor_pressure,
+)
 
 
 def disaggregate_humidity(

@@ -25,12 +25,12 @@
 #                                                                      #
 ########################################################################
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
 
 import numpy as np
 import pandas as pd
-from .util.util import hourly_index
-from .util.util import get_sun_times
+
+from .util.util import get_sun_times, hourly_index
 
 
 def disaggregate_temperature(
@@ -66,7 +66,7 @@ def disaggregate_temperature(
     ):
         raise ValueError("Invalid option")
 
-    temp_disagg = pd.Series(index=hourly_index(data_daily.index))
+    temp_disagg = pd.Series(index=hourly_index(data_daily.index), dtype="float64")
 
     if method in ("sine_min_max", "sine_mean", "sine"):
         # for this option assume time of minimum and maximum and fit
@@ -92,7 +92,7 @@ def disaggregate_temperature(
                 "max_val_next",
                 "mean_val_cur",
             ],
-            dtype=pd.np.int64,
+            dtype=np.int64,
         )
 
         if min_max_time == "fix":
@@ -157,7 +157,7 @@ def disaggregate_temperature(
         max_val = locdf.max_val_cur.copy()
         max_val[max_val.index.hour < locdf.min_loc] = locdf.max_val_before
 
-        temp_disagg = pd.Series(index=min_val.index)
+        temp_disagg = pd.Series(index=min_val.index, dtype="float64")
 
         if method in ("sine_min_max", "sine"):
             delta_val = max_val - min_val

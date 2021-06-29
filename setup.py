@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 long_description = """MELODIST is an open-source toolbox written in Python for
 disaggregating daily meteorological time series to hourly time steps. The
@@ -34,5 +34,9 @@ setup(
         "Programming Language :: Python :: 3.7",
     ],
     packages=find_packages(exclude=["docs"]),
-    install_requires=["numpy", "scipy", "pandas>=0.18.0",],
+    install_requires=[
+        "numpy",
+        "scipy",
+        "pandas>=0.18.0",
+    ],
 )

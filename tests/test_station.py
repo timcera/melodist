@@ -1,4 +1,6 @@
+# -*- coding: utf-8 -*-
 import copy
+
 import numpy as np
 from util import MelodistTestCase, setup_station
 

@@ -1,7 +1,10 @@
+# -*- coding: utf-8 -*-
 import copy
-import melodist
-import pandas as pd
 import unittest
+
+import pandas as pd
+
+import melodist
 
 
 class MelodistTestCase(unittest.TestCase):

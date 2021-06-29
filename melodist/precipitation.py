@@ -29,7 +29,7 @@
 # to 5 minutes data (9, 10, or 11 levels of branching)
 # Author: Siling Chen
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
 
 import copy
 
@@ -37,8 +37,7 @@ import numpy as np
 import pandas as pd
 
 from . import cascade
-from .util.util import distribute_equally
-from .util.util import hourly_index
+from .util.util import distribute_equally, hourly_index
 
 
 def disagg_prec(

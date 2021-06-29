@@ -25,12 +25,13 @@
 #                                                                      #
 ########################################################################
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
+
+import numpy as np
+import pandas as pd
+import scipy.optimize
 
 from .util.util import hourly_index
-import pandas as pd
-import numpy as np
-import scipy.optimize
 
 """
 This routine disaggregates daily values of global radiation data to

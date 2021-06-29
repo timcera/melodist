@@ -23,14 +23,12 @@
 #                                                                                                             #
 ###############################################################################################################
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
 
 import pandas as pd
 
 from .. import melodist
-from .util.util import hourly_index
-from .util.util import get_sun_times
-from .util.util import prepare_interpolation_data
+from .util.util import get_sun_times, hourly_index, prepare_interpolation_data
 
 
 class Station(object):
@@ -93,7 +91,7 @@ class Station(object):
     @data_daily.setter
     def data_daily(self, df):
         assert isinstance(df, pd.DataFrame)
-        assert df.index.is_all_dates
+        assert df.index.inferred_type == "datetime64"
         # for col in df:
         #     assert col in Station._columns_daily
         assert df.index.resolution == "day"

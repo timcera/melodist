@@ -23,15 +23,17 @@
 #                                                                                                             #
 ###############################################################################################################
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
 
-from .. import melodist
-from .util.bunch import Bunch
-from .util import util as hourly_index
-from .util.util import calculate_mean_daily_course_by_month
 import json
+
 import numpy as np
 import pandas as pd
+
+from .. import melodist
+from .util import util as hourly_index
+from .util.bunch import Bunch
+from .util.util import calculate_mean_daily_course_by_month
 
 
 class StationStatistics(object):
@@ -77,7 +79,7 @@ class StationStatistics(object):
     @data.setter
     def data(self, df):
         assert isinstance(df, pd.DataFrame)
-        assert df.index.is_all_dates
+        assert df.index.inferred_type == "datetime64"
         assert df.index.resolution == "hour"
 
         self._data = df.copy()
@@ -150,7 +152,10 @@ class StationStatistics(object):
 
         if data_daily is not None:
             pot_rad = melodist.potential_radiation(
-                hourly_index(data_daily.index), self._lon, self._lat, self._timezone,
+                hourly_index(data_daily.index),
+                self._lon,
+                self._lat,
+                self._timezone,
             )
             pot_rad_daily = pot_rad.resample("D").mean()
             obs_rad_daily = self.data.glob.resample("D").mean()

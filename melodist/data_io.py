@@ -23,10 +23,10 @@
 #                                                                                                             #
 ###############################################################################################################
 
+import collections
 import glob
 
 import pandas as pd
-import collections
 
 
 def read_smet(filename, mode):
@@ -319,7 +319,9 @@ def write_smet(filename, data, metadata, nodata_value=-999, mode="h", check_nan=
         f.write("[DATA]\n")
 
         data_str = data.fillna(nodata_value).to_string(
-            header=False, index=False, float_format=lambda x: "{:.2f}".format(x),
+            header=False,
+            index=False,
+            float_format=lambda x: "{:.2f}".format(x),
         )
 
         f.write(data_str)

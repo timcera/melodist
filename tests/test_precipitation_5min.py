@@ -1,7 +1,10 @@
-import pandas as pd
-import numpy as np
-import melodist
+# -*- coding: utf-8 -*-
 import unittest
+
+import numpy as np
+import pandas as pd
+
+import melodist
 
 
 class Test5MinutePrecipitation(unittest.TestCase):
