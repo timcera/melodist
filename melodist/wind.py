@@ -1,27 +1,29 @@
 # -*- coding: utf-8 -*-
-###############################################################################################################
-# This file is part of MELODIST - MEteoroLOgical observation time series DISaggregation Tool                  #
-# a program to disaggregate daily values of meteorological variables to hourly values                         #
-#                                                                                                             #
-# Copyright (C) 2016  Florian Hanzer (1,2), Kristian Förster (1,2), Benjamin Winter (1,2), Thomas Marke (1)   #
-#                                                                                                             #
-# (1) Institute of Geography, University of Innsbruck, Austria                                                #
-# (2) alpS - Centre for Climate Change Adaptation, Innsbruck, Austria                                         #
-#                                                                                                             #
-# MELODIST is free software: you can redistribute it and/or modify                                            #
-# it under the terms of the GNU General Public License as published by                                        #
-# the Free Software Foundation, either version 3 of the License, or                                           #
-# (at your option) any later version.                                                                         #
-#                                                                                                             #
-# MELODIST is distributed in the hope that it will be useful,                                                 #
-# but WITHOUT ANY WARRANTY; without even the implied warranty of                                              #
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                                                #
-# GNU General Public License for more details.                                                                #
-#                                                                                                             #
-# You should have received a copy of the GNU General Public License                                           #
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.                                       #
-#                                                                                                             #
-###############################################################################################################
+########################################################################
+# This file is part of MELODIST - MEteoroLOgical observation time      #
+# series DISaggregation Tool a program to disaggregate daily values    #
+# of meteorological variables to hourly values                         #
+#                                                                      #
+# Copyright (C) 2016  Florian Hanzer (1, 2), Kristian Förster (1, 2),  #
+# Benjamin Winter (1, 2), Thomas Marke (1)                             #
+#                                                                      #
+# (1) Institute of Geography, University of Innsbruck, Austria         #
+# (2) alpS - Centre for Climate Change Adaptation, Innsbruck, Austria  #
+#                                                                      #
+# MELODIST is free software: you can redistribute it and/or modify     #
+# it under the terms of the GNU General Public License as published by #
+# the Free Software Foundation, either version 3 of the License, or    #
+# (at your option) any later version.                                  #
+#                                                                      #
+# MELODIST is distributed in the hope that it will be useful,          #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of       #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the         #
+# GNU General Public License for more details.                         #
+#                                                                      #
+# You should have received a copy of the GNU General Public License    #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.#
+#                                                                      #
+########################################################################
 
 from __future__ import absolute_import, division, print_function
 
@@ -46,7 +48,9 @@ def _cosine_function(x, a, b, t_shift):
     """
 
     mean_wind, t = x
-    return a * mean_wind * np.cos(np.pi * (t - t_shift) / 12) + b * mean_wind
+    return (
+        a * mean_wind * np.cos(np.pi * (t.astype(int) - t_shift) / 12) + b * mean_wind
+    )
 
 
 def disaggregate_wind(wind_daily, method="equal", a=None, b=None, t_shift=None):
@@ -70,11 +74,17 @@ def disaggregate_wind(wind_daily, method="equal", a=None, b=None, t_shift=None):
         wind_disagg = wind_eq
     elif method == "cosine":
         assert None not in (a, b, t_shift)
-        wind_disagg = _cosine_function(
-            np.array([wind_eq.values, wind_eq.index.hour]), a, b, t_shift
+        wind_disagg = pd.DataFrame(
+            _cosine_function(
+                np.array([wind_eq.values, wind_eq.index.hour]), a, b, t_shift
+            ),
+            index=wind_eq.index,
         )
     elif method == "random":
-        wind_disagg = wind_eq * (-np.log(np.random.rand(len(wind_eq)))) ** 0.3
+        wind_disagg = pd.DataFrame(
+            wind_eq * (-np.log(np.random.rand(len(wind_eq)))) ** 0.3,
+            index=wind_eq.index,
+        )
 
     return wind_disagg
 
