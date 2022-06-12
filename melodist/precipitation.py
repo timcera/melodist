@@ -29,7 +29,6 @@
 # to 5 minutes data (9, 10, or 11 levels of branching)
 # Author: Siling Chen
 
-from __future__ import absolute_import, division, print_function
 
 import copy
 
@@ -131,7 +130,7 @@ def disagg_prec_cascade(
             overwrite_stats = True
             list_casc = cascade_options
         else:
-            raise ValueError("Cascade statistics list must have %s elements!" % si)
+            raise ValueError(f"Cascade statistics list must have {si} elements!")
     else:
         raise TypeError("cascade_options has invalid type")
 
@@ -549,16 +548,7 @@ def aggregate_precipitation(vec_data, hourly=True, percentile=50):
                     # Test
                     if abs(r1 + r2 - vdn.precip.values[j]) > 1.0e-3:
                         print(
-                            "i="
-                            + str(i)
-                            + ", j="
-                            + str(j)
-                            + ", r1="
-                            + str(r1)
-                            + ", r2="
-                            + str(r2)
-                            + ", Summe="
-                            + str(vdn.precip.values[j])
+                            f"i={str(i)}, j={str(j)}, r1={str(r1)}, r2={str(r2)}, Summe={str(vdn.precip.values[j])}"
                         )
                         print(vec_data.index[i])
                         print(vdn.index[j])
@@ -739,10 +729,10 @@ def sub_level_index(daily_index, level=9, fill_gaps=False):
     sublevel_index = pd.date_range(
         start=daily_index.min(),
         end=daily_index.max().replace(hour=23, minute=59, second=59),
-        freq="%sU" % frequency,
+        freq=f"{frequency}U",
     )
     # remove days that are not in the daily index:
-    time_steps = 2 ** level
+    time_steps = 2**level
     if not fill_gaps and len(sublevel_index) > len(daily_index) * time_steps:
         df = pd.DataFrame(
             index=sublevel_index.date,

@@ -25,7 +25,6 @@
 #                                                                      #
 ########################################################################
 
-from __future__ import absolute_import, division, print_function
 
 import numpy as np
 import pandas as pd
@@ -271,7 +270,7 @@ def bristow_campbell(tmin, tmax, pot_rad_daily, A, C):
         A = A.loc[months].values
         C = C.loc[months].values
 
-    transmissivity = A * (1 - np.exp(-B * dT ** C))
+    transmissivity = A * (1 - np.exp(-B * dT**C))
     R0 = transmissivity * pot_rad_daily
 
     return R0

@@ -1,27 +1,29 @@
 # -*- coding: utf-8 -*-
-###############################################################################################################
-# This file is part of MELODIST - MEteoroLOgical observation time series DISaggregation Tool                  #
-# a program to disaggregate daily values of meteorological variables to hourly values                         #
-#                                                                                                             #
-# Copyright (C) 2016  Florian Hanzer (1,2), Kristian Förster (1,2), Benjamin Winter (1,2), Thomas Marke (1)   #
-#                                                                                                             #
-# (1) Institute of Geography, University of Innsbruck, Austria                                                #
-# (2) alpS - Centre for Climate Change Adaptation, Innsbruck, Austria                                         #
-#                                                                                                             #
-# MELODIST is free software: you can redistribute it and/or modify                                            #
-# it under the terms of the GNU General Public License as published by                                        #
-# the Free Software Foundation, either version 3 of the License, or                                           #
-# (at your option) any later version.                                                                         #
-#                                                                                                             #
-# MELODIST is distributed in the hope that it will be useful,                                                 #
-# but WITHOUT ANY WARRANTY; without even the implied warranty of                                              #
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                                                #
-# GNU General Public License for more details.                                                                #
-#                                                                                                             #
-# You should have received a copy of the GNU General Public License                                           #
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.                                       #
-#                                                                                                             #
-###############################################################################################################
+########################################################################
+# This file is part of MELODIST - MEteoroLOgical observation time      #
+# series DISaggregation Tool a program to disaggregate daily values    #
+# of meteorological variables to hourly values                         #
+#                                                                      #
+# Copyright (C) 2016  Florian Hanzer (1, 2), Kristian Förster (1, 2),  #
+# Benjamin Winter (1, 2), Thomas Marke (1)                             #
+#                                                                      #
+# (1) Institute of Geography, University of Innsbruck, Austria         #
+# (2) alpS - Centre for Climate Change Adaptation, Innsbruck, Austria  #
+#                                                                      #
+# MELODIST is free software: you can redistribute it and/or modify     #
+# it under the terms of the GNU General Public License as published by #
+# the Free Software Foundation, either version 3 of the License, or    #
+# (at your option) any later version.                                  #
+#                                                                      #
+# MELODIST is distributed in the hope that it will be useful,          #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of       #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the         #
+# GNU General Public License for more details.                         #
+#                                                                      #
+# You should have received a copy of the GNU General Public License    #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.#
+#                                                                      #
+########################################################################
 
 import collections
 import glob
@@ -187,9 +189,7 @@ def read_dwd(filename, metadata, mode="d", skip_last=True):
                 year = date_time[0:4]
                 minute = "00"
                 sec = "00"
-                return pd.Timestamp(
-                    "%s-%s-%s %s:%s:%s" % (year, month, day, hour, minute, sec)
-                )
+                return pd.Timestamp(f"{year}-{month}-{day} {hour}:{minute}:{sec}")
 
             data = pd.read_csv(
                 filename,
@@ -313,7 +313,7 @@ def write_smet(filename, data, metadata, nodata_value=-999, mode="h", check_nan=
         f.write("[HEADER]\n")
 
         for k, v in list(metadata.items()):
-            f.write("{} = {}\n".format(k, v))
+            f.write(f"{k} = {v}\n")
 
         # data
         f.write("[DATA]\n")
@@ -321,7 +321,7 @@ def write_smet(filename, data, metadata, nodata_value=-999, mode="h", check_nan=
         data_str = data.fillna(nodata_value).to_string(
             header=False,
             index=False,
-            float_format=lambda x: "{:.2f}".format(x),
+            float_format=lambda x: f"{x:.2f}",
         )
 
         f.write(data_str)
@@ -388,7 +388,7 @@ def read_knmi_dataset(directory):
     Returns:
         pandas data frame including time series
     """
-    filemask = "%s*.txt" % directory
+    filemask = f"{directory}*.txt"
     filelist = glob.glob(filemask)
 
     columns_hourly = ["temp", "precip", "glob", "hum", "wind", "ssd"]
