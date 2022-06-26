@@ -186,7 +186,7 @@ def read_dwd(filename, metadata, mode="d", skip_last=True):
                 hour = date_time[8:10]
                 day = date_time[6:8]
                 month = date_time[4:6]
-                year = date_time[0:4]
+                year = date_time[:4]
                 minute = "00"
                 sec = "00"
                 return pd.Timestamp(f"{year}-{month}-{day} {hour}:{minute}:{sec}")
@@ -294,7 +294,7 @@ def write_smet(filename, data, metadata, nodata_value=-999, mode="h", check_nan=
         # converte date_times to SMET timestamps
         if mode == "d":
             t = "%Y-%m-%dT00:00"
-        if mode == "h":
+        elif mode == "h":
             t = "%Y-%m-%dT%H:%M"
 
         data["timestamp"] = [d.strftime(t) for d in data.index]
@@ -342,7 +342,7 @@ def read_single_knmi_file(filename):
         filename,
         parse_dates=[["YYYYMMDD", "HH"]],
         date_parser=lambda yyyymmdd, hh: pd.datetime(
-            int(str(yyyymmdd)[0:4]),
+            int(str(yyyymmdd)[:4]),
             int(str(yyyymmdd)[4:6]),
             int(str(yyyymmdd)[6:8]),
             int(hh) - 1,
@@ -352,6 +352,7 @@ def read_single_knmi_file(filename):
         na_values="",
         keep_date_col=True,
     )
+
 
     hourly_data_obs_raw.index = hourly_data_obs_raw["YYYYMMDD_HH"]
     hourly_data_obs_raw.index = hourly_data_obs_raw.index + pd.Timedelta(hours=1)

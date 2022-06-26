@@ -297,7 +297,7 @@ def detect_gaps(dataframe, timestep, print_all=False, print_max=5, verbose=True)
     except:
         print("Error: Invalid dataframe.")
         return -1
-    for i in range(0, n):
+    for i in range(n):
         if i > 0:
             time_diff = dataframe.index[i] - dataframe.index[i - 1]
             if time_diff.delta / 1e9 != timestep:
@@ -351,23 +351,21 @@ def drop_incomplete_days(dataframe, shift=0):
         print("Error: Invalid dataframe.")
         return dataframe
 
-    delete = list()
+    delete = []
 
     # drop heading lines if required
-    for i in range(0, n):
+    for i in range(n):
         if dataframe.index.hour[i] == first and dataframe.index.minute[i] == 0:
             break
-        else:
-            delete.append(i)
-            dropped += 1
+        delete.append(i)
+        dropped += 1
 
     # drop tailing lines if required
     for i in range(n - 1, 0, -1):
         if dataframe.index.hour[i] == last and dataframe.index.minute[i] == 0:
             break
-        else:
-            delete.append(i)
-            dropped += 1
+        delete.append(i)
+        dropped += 1
     # print("The following rows have been dropped (%i in total):" % dropped)
     # print(delete)
     return dataframe.drop(dataframe.index[[delete]])

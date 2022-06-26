@@ -217,7 +217,7 @@ class StationStatistics(object):
         """
 
         def json_encoder(obj):
-            if isinstance(obj, pd.DataFrame) or isinstance(obj, pd.Series):
+            if isinstance(obj, (pd.DataFrame, pd.Series)):
                 if isinstance(obj.index, pd.MultiIndex):
                     obj = obj.reset_index()  # convert MultiIndex to columns
 

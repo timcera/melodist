@@ -26,7 +26,7 @@ class TestIO(MelodistTestCase):
         assert_frame_equal(ss.temp.mean_course, ss2.temp.mean_course)
 
         assert_equal(ss.precip.months, ss2.precip.months)
-        assert all([cs1 == cs2 for cs1, cs2 in zip(ss.precip.stats, ss2.precip.stats)])
+        assert all(cs1 == cs2 for cs1, cs2 in zip(ss.precip.stats, ss2.precip.stats))
 
         assert ss.hum.a0 == ss2.hum.a0
         assert ss.hum.a1 == ss2.hum.a1

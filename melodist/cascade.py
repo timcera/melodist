@@ -223,7 +223,7 @@ class CascadeStatistics:
         self.p01 = self.p01[:, :] + other_casc_obj.p01[:, :]
         self.p10 = self.p10[:, :] + other_casc_obj.p10[:, :]
         self.pxx = self.pxx[:, :] + other_casc_obj.pxx[:, :]
-        for k in range(0, 7):
+        for k in range(7):
             self.wxx[k, :, :] = self.wxx[k, :, :] + other_casc_obj.wxx[k, :, :]
 
     def __mul__(self, factor):

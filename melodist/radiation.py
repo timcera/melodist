@@ -222,10 +222,7 @@ def potential_radiation(
         index=dates, data=dict(direct=direct_radiation, diffuse=diffuse_radiation)
     )
 
-    if split:
-        return df
-    else:
-        return df.direct + df.diffuse
+    return df if split else df.direct + df.diffuse
 
 
 def bristow_campbell(tmin, tmax, pot_rad_daily, A, C):
@@ -271,9 +268,7 @@ def bristow_campbell(tmin, tmax, pot_rad_daily, A, C):
         C = C.loc[months].values
 
     transmissivity = A * (1 - np.exp(-B * dT**C))
-    R0 = transmissivity * pot_rad_daily
-
-    return R0
+    return transmissivity * pot_rad_daily
 
 
 def fit_bristow_campbell_params(tmin, tmax, pot_rad_daily, obs_rad_daily):
@@ -339,9 +334,7 @@ def angstroem(ssd, day_length, pot_rad_daily, a, b):
         a = a.loc[months].values
         b = b.loc[months].values
 
-    glob_day = (a + b * ssd / day_length) * pot_rad_daily
-
-    return glob_day
+    return (a + b * ssd / day_length) * pot_rad_daily
 
 
 def fit_angstroem_params(ssd, day_length, pot_rad_daily, obs_rad_daily):

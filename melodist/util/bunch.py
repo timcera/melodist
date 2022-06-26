@@ -35,8 +35,7 @@ class Bunch(dict):
         self.__dict__ = self
 
     def __copy__(self):
-        copy = type(self)(**self)
-        return copy
+        return type(self)(**self)
 
     def __deepcopy__(self, memo):
         return Bunch(**copy.deepcopy(dict(self)))
