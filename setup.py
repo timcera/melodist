@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from setuptools import find_packages, setup
 
 long_description = """MELODIST is an open-source toolbox written in Python for

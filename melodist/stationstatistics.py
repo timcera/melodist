@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 ########################################################################
 # This file is part of MELODIST - MEteoroLOgical observation time      #
 # series DISaggregation Tool a program to disaggregate daily values    #
@@ -27,17 +26,27 @@
 
 
 import json
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-from .. import melodist
+from . import cascade
+from .humidity import calculate_dewpoint_regression, calculate_month_hour_precip_mean
+from .precipitation import build_casc
+from .radiation import (
+    fit_angstroem_params,
+    fit_bristow_campbell_params,
+    potential_radiation,
+)
+from .temperature import get_shift_by_data
 from .util import util as hourly_index
 from .util.bunch import Bunch
 from .util.util import calculate_mean_daily_course_by_month
+from .wind import fit_cosine_function
 
 
-class StationStatistics(object):
+class StationStatistics:
     """
     Class representing objects that include statistical information about
     diurnal features of selected variables. A StationStatistics object is
@@ -100,7 +109,7 @@ class StationStatistics(object):
             months = [np.arange(12) + 1]
 
         self.precip.months = months
-        self.precip.stats = melodist.build_casc(
+        self.precip.stats = build_casc(
             self.data, months=months, avg_stats=avg_stats, percentile=percentile
         )
 
@@ -108,26 +117,24 @@ class StationStatistics(object):
         """
         Calculates statistics in order to derive diurnal patterns of wind speed
         """
-        a, b, t_shift = melodist.fit_cosine_function(self.data.wind)
+        a, b, t_shift = fit_cosine_function(self.data.wind)
         self.wind.update(a=a, b=b, t_shift=t_shift)
 
     def calc_humidity_stats(self):
         """
         Calculates statistics in order to derive diurnal patterns of relative humidity.
         """
-        a1, a0 = melodist.calculate_dewpoint_regression(self.data, return_stats=False)
+        a1, a0 = calculate_dewpoint_regression(self.data)
         self.hum.update(a0=a0, a1=a1)
         self.hum.kr = 12
 
-        self.hum.month_hour_precip_mean = melodist.calculate_month_hour_precip_mean(
-            self.data
-        )
+        self.hum.month_hour_precip_mean = calculate_month_hour_precip_mean(self.data)
 
     def calc_temperature_stats(self):
         """
         Calculates statistics in order to derive diurnal patterns of temperature
         """
-        self.temp.max_delta = melodist.get_shift_by_data(
+        self.temp.max_delta = get_shift_by_data(
             self.data.temp, self._lon, self._lat, self._timezone
         )
         self.temp.mean_course = calculate_mean_daily_course_by_month(
@@ -152,7 +159,7 @@ class StationStatistics(object):
         self.glob.mean_course = calculate_mean_daily_course_by_month(self.data.glob)
 
         if data_daily is not None:
-            pot_rad = melodist.potential_radiation(
+            pot_rad = potential_radiation(
                 hourly_index(data_daily.index),
                 self._lon,
                 self._lat,
@@ -176,7 +183,7 @@ class StationStatistics(object):
 
             if "ssd" in data_daily and day_length is not None:
                 for months in month_ranges:
-                    a, b = melodist.fit_angstroem_params(
+                    a, b = fit_angstroem_params(
                         extract_months(data_daily.ssd, months),
                         extract_months(day_length, months),
                         extract_months(pot_rad_daily, months),
@@ -197,7 +204,7 @@ class StationStatistics(object):
                 ).dropna(how="any")
 
                 for months in month_ranges:
-                    a, c = melodist.fit_bristow_campbell_params(
+                    a, c = fit_bristow_campbell_params(
                         extract_months(df.tmin, months),
                         extract_months(df.tmax, months),
                         extract_months(df.pot_rad, months),
@@ -217,12 +224,12 @@ class StationStatistics(object):
         """
 
         def json_encoder(obj):
-            if isinstance(obj, pd.DataFrame) or isinstance(obj, pd.Series):
+            if isinstance(obj, (pd.DataFrame, pd.Series)):
                 if isinstance(obj.index, pd.MultiIndex):
                     obj = obj.reset_index()  # convert MultiIndex to columns
 
                 return json.loads(obj.to_json(date_format="iso"))
-            elif isinstance(obj, melodist.cascade.CascadeStatistics):
+            elif isinstance(obj, cascade.CascadeStatistics):
                 return obj.__dict__
             elif isinstance(obj, np.ndarray):
                 return obj.tolist()
@@ -242,8 +249,7 @@ class StationStatistics(object):
         if filename is None:
             return j
         else:
-            with open(filename, "w") as f:
-                f.write(j)
+            Path(filename).write_text(j)
 
     @classmethod
     def from_json(cls, filename):
@@ -259,7 +265,7 @@ class StationStatistics(object):
             if (
                 "p01" in d and "pxx" in d
             ):  # we assume this is a CascadeStatistics object
-                return melodist.cascade.CascadeStatistics.from_dict(d)
+                return cascade.CascadeStatistics.from_dict(d)
 
             return d
 

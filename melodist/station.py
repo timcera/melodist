@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 ########################################################################
 # This file is part of MELODIST - MEteoroLOgical observation time      #
 # series DISaggregation Tool a program to disaggregate daily values    #
@@ -28,11 +27,17 @@
 
 import pandas as pd
 
-from .. import melodist
+from .humidity import disaggregate_humidity as disagg_humidity
+from .precipitation import disagg_prec, precip_master_station, seasonal_subset
+from .radiation import disaggregate_radiation as disagg_radiation
+from .radiation import potential_radiation
+from .stationstatistics import StationStatistics
+from .temperature import disaggregate_temperature as disagg_temperature
 from .util.util import get_sun_times, hourly_index, prepare_interpolation_data
+from .wind import disaggregate_wind as disagg_wind
 
 
-class Station(object):
+class Station:
     """
     Class representing meteorological stations including all relevant
     information such as metadata and meteorological time series (observed
@@ -68,7 +73,7 @@ class Station(object):
         self._data_daily = None
         self._data_disagg = None
 
-        self.statistics = melodist.StationStatistics(lon=lon, lat=lat)
+        self.statistics = StationStatistics(lon=lon, lat=lat)
         self.id = id
         self.name = name
         self.lon = lon
@@ -168,7 +173,7 @@ class Station(object):
 
     @statistics.setter
     def statistics(self, s):
-        assert isinstance(s, melodist.StationStatistics)
+        assert isinstance(s, StationStatistics)
         s._lon = self.lon
         s._lat = self.lat
         s._timezone = self.timezone
@@ -212,7 +217,7 @@ class Station(object):
                 Draws random numbers to distribute wind speed (usually not conserving the
                 daily average).
         """
-        self.data_disagg.wind = melodist.disaggregate_wind(
+        self.data_disagg.wind = disagg_wind(
             self.data_daily.wind, method=method, **self.statistics.wind
         )
 
@@ -250,7 +255,7 @@ class Station(object):
         preserve_daily_mean : bool, optional
             If True, correct the daily mean values of the disaggregated data with the observed daily means.
         """
-        self.data_disagg.hum = melodist.disaggregate_humidity(
+        self.data_disagg.hum = disagg_humidity(
             self.data_daily,
             temp=self.data_disagg.temp,
             method=method,
@@ -303,7 +308,7 @@ class Station(object):
         mod_nighttime : bool, optional
             Use linear interpolation between minimum and maximum temperature.
         """
-        self.data_disagg.temp = melodist.disaggregate_temperature(
+        self.data_disagg.temp = disagg_temperature(
             self.data_daily,
             method=method,
             min_max_time=min_max_time,
@@ -342,20 +347,16 @@ class Station(object):
             (required for ``method='masterstation'``).
         """
         if method == "equal":
-            precip_disagg = melodist.disagg_prec(
-                self.data_daily, method=method, shift=shift
-            )
+            precip_disagg = disagg_prec(self.data_daily, method=method, shift=shift)
         elif method == "cascade":
             precip_disagg = pd.Series(index=self.data_disagg.index, dtype=float)
 
             for months, stats in zip(
                 self.statistics.precip.months, self.statistics.precip.stats
             ):
-                precip_daily = melodist.seasonal_subset(
-                    self.data_daily.precip, months=months
-                )
+                precip_daily = seasonal_subset(self.data_daily.precip, months=months)
                 if len(precip_daily) > 1:
-                    data = melodist.disagg_prec(
+                    data = disagg_prec(
                         precip_daily,
                         method=method,
                         cascade_options=stats,
@@ -364,7 +365,7 @@ class Station(object):
                     )
                     precip_disagg.loc[data.index] = data
         elif method == "masterstation":
-            precip_disagg = melodist.precip_master_station(
+            precip_disagg = precip_master_station(
                 self.data_daily.precip, master_precip, zerodiv
             )
 
@@ -401,11 +402,11 @@ class Station(object):
             self.calc_sun_times()
 
         if pot_rad is None and method != "mean_course":
-            pot_rad = melodist.potential_radiation(
+            pot_rad = potential_radiation(
                 self.data_disagg.index, self.lon, self.lat, self.timezone
             )
 
-        self.data_disagg.glob = melodist.disaggregate_radiation(
+        self.data_disagg.glob = disagg_radiation(
             self.data_daily,
             sun_times=self.sun_times,
             pot_rad=pot_rad,

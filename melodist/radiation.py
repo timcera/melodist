@@ -1,4 +1,7 @@
-# -*- coding: utf-8 -*-
+"""
+This routine disaggregates daily values of global radiation data to
+hourly values.
+"""
 ########################################################################
 # This file is part of MELODIST - MEteoroLOgical observation time      #
 # series DISaggregation Tool a program to disaggregate daily values    #
@@ -25,17 +28,11 @@
 #                                                                      #
 ########################################################################
 
-
 import numpy as np
 import pandas as pd
 import scipy.optimize
 
 from .util.util import hourly_index
-
-"""
-This routine disaggregates daily values of global radiation data to
-hourly values.
-"""
 
 
 def disaggregate_radiation(
@@ -224,8 +221,7 @@ def potential_radiation(
 
     if split:
         return df
-    else:
-        return df.direct + df.diffuse
+    return df.direct + df.diffuse
 
 
 def bristow_campbell(tmin, tmax, pot_rad_daily, A, C):

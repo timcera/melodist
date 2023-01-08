@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 ########################################################################
 # This file is part of MELODIST - MEteoroLOgical observation time      #
 # series DISaggregation Tool a program to disaggregate daily values    #
@@ -351,15 +350,14 @@ def drop_incomplete_days(dataframe, shift=0):
         print("Error: Invalid dataframe.")
         return dataframe
 
-    delete = list()
+    delete = []
 
     # drop heading lines if required
     for i in range(0, n):
         if dataframe.index.hour[i] == first and dataframe.index.minute[i] == 0:
             break
-        else:
-            delete.append(i)
-            dropped += 1
+        delete.append(i)
+        dropped += 1
 
     # drop tailing lines if required
     for i in range(n - 1, 0, -1):

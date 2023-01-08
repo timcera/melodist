@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*-
 import tempfile
 
+import melodist
 from numpy.testing import assert_equal
 from pandas.testing import assert_frame_equal, assert_series_equal
 from util import MelodistTestCase
-
-import melodist
 
 
 class TestIO(MelodistTestCase):

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 ########################################################################
 # This file is part of MELODIST - MEteoroLOgical observation time      #
 # series DISaggregation Tool a program to disaggregate daily values    #
@@ -146,7 +145,7 @@ def disagg_prec_cascade(
         vdn7 = np.zeros(n * 128)
         vdn8 = np.zeros(n * 256)
         vdn9 = np.zeros(n * 512)
-    if level == 10 or level == 11:
+    if level in (10, 11):
         vdn10 = np.zeros(n * 1024)
         if level == 11:
             vdn11 = np.zeros(n * 2048)
@@ -226,7 +225,7 @@ def disagg_prec_cascade(
                     else:
                         vbtype = cascade.BoxTypes.isolated
                 else:  # neither at at the end nor at the beginning
-                    if vdn_in[i - 1] == 0 and vdn_in[i + 1] == 0:
+                    if vdn_in[i - 1] == vdn_in[i + 1] == 0:
                         vbtype = cascade.BoxTypes.isolated
 
                     if vdn_in[i - 1] == 0 and vdn_in[i + 1] > 0:
@@ -318,7 +317,7 @@ def disagg_prec_cascade(
 
     else:
         precip_sn = pd.Series(
-            index=sub_level_index(precip_daily.index, level=level, fill_gaps=False),
+            index=sub_level_index(precip_daily.index, level=level),
             data=vdn_out,
         )
         disagg_precip = precip_sn.resample("5min").sum()
@@ -503,7 +502,7 @@ def aggregate_precipitation(vec_data, hourly=True, percentile=50):
                 else:
                     vbtype[i] = cascade.BoxTypes.isolated
             else:  # neither at at the end nor at the beginning
-                if vdn.precip.values[i - 1] == 0.0 and vdn.precip.values[i + 1] == 0.0:
+                if vdn.precip.values[i - 1] == vdn.precip.values[i + 1] == 0.0:
                     vbtype[i] = cascade.BoxTypes.isolated
                 if vdn.precip.values[i - 1] == 0.0 and vdn.precip.values[i + 1] > 0.0:
                     vbtype[i] = cascade.BoxTypes.starting
@@ -548,7 +547,7 @@ def aggregate_precipitation(vec_data, hourly=True, percentile=50):
                     # Test
                     if abs(r1 + r2 - vdn.precip.values[j]) > 1.0e-3:
                         print(
-                            f"i={str(i)}, j={str(j)}, r1={str(r1)}, r2={str(r2)}, Summe={str(vdn.precip.values[j])}"
+                            f"i={i}, j={j}, r1={r1}, r2={r2}, Summe={vdn.precip.values[j]}"
                         )
                         print(vec_data.index[i])
                         print(vdn.index[j])
@@ -671,7 +670,7 @@ def build_casc(
         list holding the results
     """
 
-    list_seasonal_casc = list()
+    list_seasonal_casc = []
 
     if months is None:
         months = [np.arange(12) + 1]
@@ -684,7 +683,7 @@ def build_casc(
 
         casc_opt = cascade.CascadeStatistics()
         casc_opt.percentile = percentile
-        list_casc_opt = list()
+        list_casc_opt = []
 
         count = 0
 

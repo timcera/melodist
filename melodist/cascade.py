@@ -1,4 +1,7 @@
-# -*- coding: utf-8 -*-
+"""
+cascade.py provides basic definitions for the precipitation disaggregation
+procedure using the cascade model by Olsson (1998)
+"""
 #######################################################################
 # This file is part of MELODIST - MEteoroLOgical observation time     #
 # series DISaggregation Tool a program to disaggregate daily values   #
@@ -26,13 +29,7 @@
 #                                                                     #
 #######################################################################
 
-
 import numpy as np
-
-"""
-cascade.py provides basic definitions for the precipitation disaggregation
-procedure using the cascade model by Olsson (1998)
-"""
 
 
 class BoxTypes:
