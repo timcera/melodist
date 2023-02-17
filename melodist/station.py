@@ -430,7 +430,6 @@ class Station:
         column_hours : dict
             Dictionary containing column names in ``data_daily`` and the hour
             values they should be associated to.
-
         method, limit, limit_direction, **kwargs
             These parameters are passed on to ``pandas.Series.interpolate``.
 

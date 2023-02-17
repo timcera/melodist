@@ -89,7 +89,7 @@ def disagg_prec_cascade(
     ----------
     precip_daily : pd.Series
         daily data
-    hourly: Boolean (for an hourly resolution disaggregation)
+    hourly : Boolean (for an hourly resolution disaggregation)
         if False, then returns 5-min disaggregated precipitation
         (disaggregation level depending on the "level" variable)
     cascade_options : cascade object
@@ -388,10 +388,10 @@ def precip_master_station(precip_daily, master_precip_hourly, zerodiv):
     """Disaggregate precipitation based on the patterns of a master station
 
     Parameters
-    -----------
+    ----------
     precip_daily : pd.Series
         daily data
-    master_precip_hourly :  pd.Series
+    master_precip_hourly : pd.Series
         observed hourly data of the master station
     zerodiv : str
         method to deal with zero division by key "uniform" --> uniform
@@ -402,7 +402,6 @@ def precip_master_station(precip_daily, master_precip_hourly, zerodiv):
 
     # set some parameters for cosine function
     for index_d, precip in list(precip_daily.items()):
-
         # get hourly data of the day
         index = index_d.date().isoformat()
         precip_h = master_precip_hourly[index]
@@ -626,7 +625,7 @@ def seasonal_subset(dataframe, months="all"):
     Parameters
     ----------
     dataframe : pd.DataFrame
-    months: int, str
+    months : int, str
         Months to use for statistics, or 'all' for 1-12 (default='all')
     """
 
@@ -650,11 +649,10 @@ def build_casc(
     """Builds the cascade statistics of observed data for disaggregation
 
     Parameters
-    -----------
+    ----------
     ObsData : pd.Series
         hourly=True -> hourly obs data
         else -> 5min data (disaggregation level=9 (default), 10, 11)
-
     months : numpy array of ints
         Months for each seasons to be used for statistics (array of
         numpy array, default=1-12, e.g., [np.arange(12) + 1])

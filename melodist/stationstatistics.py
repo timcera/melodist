@@ -100,9 +100,9 @@ class StationStatistics:
 
         Parameters
         ----------
-        months :        Months for each seasons to be used for statistics (array of numpy array, default=1-12, e.g., [np.arange(12) + 1])
-        avg_stats :     average statistics for all levels True/False (default=True)
-        percentile :    percentil for splitting the dataset in small and high intensities (default=50)
+        months : Months for each seasons to be used for statistics (array of numpy array, default=1-12, e.g., [np.arange(12) + 1])
+        avg_stats : average statistics for all levels True/False (default=True)
+        percentile : percentil for splitting the dataset in small and high intensities (default=50)
 
         """
         if months is None:
@@ -150,7 +150,6 @@ class StationStatistics:
         ----------
         data_daily : DataFrame, optional
             Daily data from the associated ``Station`` object.
-
         day_length : Series, optional
             Day lengths as calculated by ``calc_sun_times``.
         """
@@ -220,7 +219,7 @@ class StationStatistics:
 
         Parameters
         ----------
-        filename:    output file that holds statistics data
+        filename : output file that holds statistics data
         """
 
         def json_encoder(obj):
@@ -258,7 +257,7 @@ class StationStatistics:
 
         Parameters
         ----------
-        filename:    input file that holds statistics data
+        filename : input file that holds statistics data
         """
 
         def json_decoder(d):

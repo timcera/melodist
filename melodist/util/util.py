@@ -126,7 +126,6 @@ def dewpoint_temperature(temp, hum):
     temp :      temperature [K]
     hum :       relative humidity
 
-
     Returns
         dewpoint temperature in K
     """
@@ -159,7 +158,6 @@ def linregress(x, y, return_stats=False):
     y :         dependent variable (series)
     return_stats : returns statistical values as well if required (bool)
 
-
     Returns
     ----
     list of parameters (and statistics)
@@ -182,7 +180,6 @@ def get_sun_times(dates, lon, lat, timezone=None):
     lat :       latitude in DecDeg
     lon :       longitude in DecDeg
     timezone : timezone
-
 
     Returns
     ----

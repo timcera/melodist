@@ -282,13 +282,10 @@ def fit_bristow_campbell_params(tmin, tmax, pot_rad_daily, obs_rad_daily):
     ----------
     tmin : Series
         Observed daily minimum temperature.
-
     tmax : Series
         Observed daily maximum temperature.
-
     pot_rad_daily : Series
         Mean potential daily solar radiation.
-
     obs_rad_daily : Series
         Mean observed daily solar radiation.
     """
@@ -317,16 +314,12 @@ def angstroem(ssd, day_length, pot_rad_daily, a, b):
     ----------
     ssd : Series
         Observed daily sunshine duration.
-
     day_length : Series
         Day lengths as calculated by ``calc_sun_times``.
-
     pot_rad_daily : Series
         Mean potential daily solar radiation.
-
     a : float
         First parameter for the Angstroem model (originally 0.25).
-
     b : float
         Second parameter for the Angstroem model (originally 0.75).
     """
@@ -350,13 +343,10 @@ def fit_angstroem_params(ssd, day_length, pot_rad_daily, obs_rad_daily):
     ----------
     ssd : Series
         Observed daily sunshine duration.
-
     day_length : Series
         Day lengths as calculated by ``calc_sun_times``.
-
     pot_rad_daily : Series
         Mean potential daily solar radiation.
-
     obs_rad_daily : Series
         Mean observed daily solar radiation.
     """
