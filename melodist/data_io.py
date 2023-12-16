@@ -1,29 +1,23 @@
-########################################################################
-# This file is part of MELODIST - MEteoroLOgical observation time      #
-# series DISaggregation Tool a program to disaggregate daily values    #
-# of meteorological variables to hourly values                         #
-#                                                                      #
-# Copyright (C) 2016  Florian Hanzer (1, 2), Kristian Förster (1, 2),  #
-# Benjamin Winter (1, 2), Thomas Marke (1)                             #
-#                                                                      #
-# (1) Institute of Geography, University of Innsbruck, Austria         #
-# (2) alpS - Centre for Climate Change Adaptation, Innsbruck, Austria  #
-#                                                                      #
-# MELODIST is free software: you can redistribute it and/or modify     #
-# it under the terms of the GNU General Public License as published by #
-# the Free Software Foundation, either version 3 of the License, or    #
-# (at your option) any later version.                                  #
-#                                                                      #
-# MELODIST is distributed in the hope that it will be useful,          #
-# but WITHOUT ANY WARRANTY; without even the implied warranty of       #
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the         #
-# GNU General Public License for more details.                         #
-#                                                                      #
-# You should have received a copy of the GNU General Public License    #
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.#
-#                                                                      #
-########################################################################
-
+################################################################################
+# This file is part of MELODIST - MEteoroLOgical observation time series       #
+# DISaggregation Tool.                                                         #
+#                                                                              #
+# Copyright (C) 2016-2023 Florian Hanzer, Kristian Förster, Benjamin Winter,   #
+# Thomas Marke                                                                 #
+#                                                                              #
+# MELODIST is free software: you can redistribute it and/or modify it under    #
+# the terms of the GNU General Public License as published by the Free         #
+# Software Foundation, either version 3 of the License, or (at your option)    #
+# any later version.                                                           #
+#                                                                              #
+# MELODIST is distributed in the hope that it will be useful, but WITHOUT ANY  #
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS    #
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more        #
+# details.                                                                     #
+#                                                                              #
+# You should have received a copy of the GNU General Public License along with #
+# this program.  If not, see <http://www.gnu.org/licenses/>.                   #
+################################################################################
 import collections
 import glob
 
@@ -76,7 +70,6 @@ def read_smet(filename, mode):
         header = collections.OrderedDict()
 
         for line_num, line in enumerate(f):
-
             if line.strip() == "[HEADER]":
                 in_header = True
                 continue
@@ -185,7 +178,7 @@ def read_dwd(filename, metadata, mode="d", skip_last=True):
                 hour = date_time[8:10]
                 day = date_time[6:8]
                 month = date_time[4:6]
-                year = date_time[0:4]
+                year = date_time[:4]
                 minute = "00"
                 sec = "00"
                 return pd.Timestamp(f"{year}-{month}-{day} {hour}:{minute}:{sec}")
@@ -221,16 +214,12 @@ def read_dwd(filename, metadata, mode="d", skip_last=True):
 
         return header, data
 
-    if type(filename) == list:
-        i = 1
-        for file in filename:
+    if isinstance(filename, list):
+        data = pd.DataFrame()
+        for line_number, file in enumerate(filename):
             header, data_h = read_single_dwd(file, metadata, mode, skip_last)
 
-            if i == 1:
-                data = data_h
-            else:
-                data = data.join(data_h, how="outer")
-            i += 1
+            data = data_h if line_number == 0 else data.join(data_h, how="outer")
 
     else:
         header, data = read_single_dwd(filename, metadata, mode, skip_last)
@@ -248,7 +237,8 @@ def write_smet(filename, data, metadata, nodata_value=-999, mode="h", check_nan=
     metadata:     header to write input as dict
     nodata_value: Nodata Value to write/use
     mode:         defines if to write daily ("d") or continuos data (default 'h')
-    check_nan:    will check if only nans in data and if true will not write this colums (default True)
+    check_nan:    will check if only nans in data and if true will not write this columns
+                  (default True)
     """
 
     # dictionary
@@ -280,32 +270,31 @@ def write_smet(filename, data, metadata, nodata_value=-999, mode="h", check_nan=
         data = data.rename(columns=dict_h)
 
     if check_nan:
-        # get all colums with data
+        # get all columns with data
         datas_in = data.sum().dropna().to_frame().T
         # get colums with no datas
         drop = [data_nan for data_nan in data.columns if data_nan not in datas_in]
         # delete columns
         data = data.drop(drop, axis=1)
 
+    # convert date_times to SMET timestamps
+    if mode == "d":
+        t = "%Y-%m-%dT00:00"
+    if mode == "h":
+        t = "%Y-%m-%dT%H:%M"
+
+    # preparing data
+    data["timestamp"] = [d.strftime(t) for d in data.index]
+
+    cols = data.columns.tolist()
+    cols = cols[-1:] + cols[:-1]
+    data = data[cols]
+
+    # metadatas update
+    metadata["fields"] = " ".join(data.columns)
+    metadata["units_multiplier"] = len(metadata["fields"].split()) * "1 "
+
     with open(filename, "w") as f:
-
-        # preparing data
-        # converte date_times to SMET timestamps
-        if mode == "d":
-            t = "%Y-%m-%dT00:00"
-        if mode == "h":
-            t = "%Y-%m-%dT%H:%M"
-
-        data["timestamp"] = [d.strftime(t) for d in data.index]
-
-        cols = data.columns.tolist()
-        cols = cols[-1:] + cols[:-1]
-        data = data[cols]
-
-        # metadatas update
-        metadata["fields"] = " ".join(data.columns)
-        metadata["units_multiplier"] = len(metadata["fields"].split()) * "1 "
-
         # writing data
         # metadata
         f.write("SMET 1.1 ASCII\n")
@@ -341,7 +330,7 @@ def read_single_knmi_file(filename):
         filename,
         parse_dates=[["YYYYMMDD", "HH"]],
         date_parser=lambda yyyymmdd, hh: pd.datetime(
-            int(str(yyyymmdd)[0:4]),
+            int(str(yyyymmdd)[:4]),
             int(str(yyyymmdd)[4:6]),
             int(str(yyyymmdd)[6:8]),
             int(hh) - 1,

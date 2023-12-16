@@ -1,30 +1,23 @@
-########################################################################
-# This file is part of MELODIST - MEteoroLOgical observation time      #
-# series DISaggregation Tool a program to disaggregate daily values    #
-# of meteorological variables to hourly values                         #
-#                                                                      #
-# Copyright (C) 2016  Florian Hanzer (1, 2), Kristian Förster (1, 2),  #
-# Benjamin Winter (1, 2), Thomas Marke (1)                             #
-#                                                                      #
-# (1) Institute of Geography, University of Innsbruck, Austria         #
-# (2) alpS - Centre for Climate Change Adaptation, Innsbruck, Austria  #
-#                                                                      #
-# MELODIST is free software: you can redistribute it and/or modify     #
-# it under the terms of the GNU General Public License as published by #
-# the Free Software Foundation, either version 3 of the License, or    #
-# (at your option) any later version.                                  #
-#                                                                      #
-# MELODIST is distributed in the hope that it will be useful,          #
-# but WITHOUT ANY WARRANTY; without even the implied warranty of       #
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the         #
-# GNU General Public License for more details.                         #
-#                                                                      #
-# You should have received a copy of the GNU General Public License    #
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.#
-#                                                                      #
-########################################################################
-
-
+################################################################################
+# This file is part of MELODIST - MEteoroLOgical observation time series       #
+# DISaggregation Tool.                                                         #
+#                                                                              #
+# Copyright (C) 2016-2023 Florian Hanzer, Kristian Förster, Benjamin Winter,   #
+# Thomas Marke                                                                 #
+#                                                                              #
+# MELODIST is free software: you can redistribute it and/or modify it under    #
+# the terms of the GNU General Public License as published by the Free         #
+# Software Foundation, either version 3 of the License, or (at your option)    #
+# any later version.                                                           #
+#                                                                              #
+# MELODIST is distributed in the hope that it will be useful, but WITHOUT ANY  #
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS    #
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more        #
+# details.                                                                     #
+#                                                                              #
+# You should have received a copy of the GNU General Public License along with #
+# this program.  If not, see <http://www.gnu.org/licenses/>.                   #
+################################################################################
 import numpy as np
 import pandas as pd
 
@@ -116,7 +109,7 @@ def disaggregate_temperature(
             # to full hour
             locdf.max_loc = (
                 sun_times.sunnoon + max_delta[locdf.index.month].values
-            ).round()
+            ).round()  # sun noon + shift derived from observed hourly data, round to full hour
 
             pos = locdf.min_loc > locdf.max_loc
             locdf.loc[pos, "max_loc"] = (
@@ -310,18 +303,18 @@ def disaggregate_temperature(
     return temp_disagg
 
 
-def get_shift_by_data(temp_hourly, lon, lat, timezone):
-    """function to get max temp shift (monthly) by hourly data
+def get_shift_by_data(temp_hourly, lon, lat, time_zone):
+    """Get maximum temperature shift (monthly) from hourly data
 
     Parameters
     ----
     hourly_data_obs : observed hourly data
-    lat :             latitude in DezDeg
-    lon :             longitude in DezDeg
-    timezone:        timezone
+    lat :             latitude (degrees)
+    lon :             longitude (degrees)
+    time_zone:        timezone
     """
     daily_index = temp_hourly.resample("D").mean().index
-    sun_times = get_sun_times(daily_index, lon, lat, timezone)
+    sun_times = get_sun_times(daily_index, lon, lat, time_zone)
 
     idxmax = temp_hourly.groupby(temp_hourly.index.date).idxmax()
     idxmax.index = pd.to_datetime(idxmax.index)

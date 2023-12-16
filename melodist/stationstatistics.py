@@ -1,31 +1,25 @@
-########################################################################
-# This file is part of MELODIST - MEteoroLOgical observation time      #
-# series DISaggregation Tool a program to disaggregate daily values    #
-# of meteorological variables to hourly values                         #
-#                                                                      #
-# Copyright (C) 2016  Florian Hanzer (1, 2), Kristian Förster (1, 2),  #
-# Benjamin Winter (1, 2), Thomas Marke (1)                             #
-#                                                                      #
-# (1) Institute of Geography, University of Innsbruck, Austria         #
-# (2) alpS - Centre for Climate Change Adaptation, Innsbruck, Austria  #
-#                                                                      #
-# MELODIST is free software: you can redistribute it and/or modify     #
-# it under the terms of the GNU General Public License as published by #
-# the Free Software Foundation, either version 3 of the License, or    #
-# (at your option) any later version.                                  #
-#                                                                      #
-# MELODIST is distributed in the hope that it will be useful,          #
-# but WITHOUT ANY WARRANTY; without even the implied warranty of       #
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the         #
-# GNU General Public License for more details.                         #
-#                                                                      #
-# You should have received a copy of the GNU General Public License    #
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.#
-#                                                                      #
-########################################################################
-
-
+################################################################################
+# This file is part of MELODIST - MEteoroLOgical observation time series       #
+# DISaggregation Tool.                                                         #
+#                                                                              #
+# Copyright (C) 2016-2023 Florian Hanzer, Kristian Förster, Benjamin Winter,   #
+# Thomas Marke                                                                 #
+#                                                                              #
+# MELODIST is free software: you can redistribute it and/or modify it under    #
+# the terms of the GNU General Public License as published by the Free         #
+# Software Foundation, either version 3 of the License, or (at your option)    #
+# any later version.                                                           #
+#                                                                              #
+# MELODIST is distributed in the hope that it will be useful, but WITHOUT ANY  #
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS    #
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more        #
+# details.                                                                     #
+#                                                                              #
+# You should have received a copy of the GNU General Public License along with #
+# this program.  If not, see <http://www.gnu.org/licenses/>.                   #
+################################################################################
 import json
+from io import StringIO
 from pathlib import Path
 
 import numpy as np
@@ -150,6 +144,7 @@ class StationStatistics:
         ----------
         data_daily : DataFrame, optional
             Daily data from the associated ``Station`` object.
+
         day_length : Series, optional
             Day lengths as calculated by ``calc_sun_times``.
         """
@@ -281,18 +276,18 @@ class StationStatistics:
 
         if stats.temp.max_delta is not None:
             stats.temp.max_delta = pd.read_json(
-                json.dumps(stats.temp.max_delta), typ="series"
+                StringIO(json.dumps(stats.temp.max_delta)), typ="series"
             ).sort_index()
 
         if stats.temp.mean_course is not None:
             mc = pd.read_json(
-                json.dumps(stats.temp.mean_course), typ="frame"
+                StringIO(json.dumps(stats.temp.mean_course)), typ="frame"
             ).sort_index()[np.arange(1, 12 + 1)]
             stats.temp.mean_course = mc.sort_index()[np.arange(1, 12 + 1)]
 
         if stats.hum.month_hour_precip_mean is not None:
             mhpm = pd.read_json(
-                json.dumps(stats.hum.month_hour_precip_mean), typ="frame"
+                StringIO(json.dumps(stats.hum.month_hour_precip_mean)), typ="frame"
             ).sort_index()
             mhpm = mhpm.set_index(
                 ["level_0", "level_1", "level_2"]
@@ -303,7 +298,9 @@ class StationStatistics:
 
         for var in ("angstroem", "bristcamp", "mean_course"):
             if stats.glob[var] is not None:
-                stats.glob[var] = pd.read_json(json.dumps(stats.glob[var])).sort_index()
+                stats.glob[var] = pd.read_json(
+                    StringIO(json.dumps(stats.glob[var]))
+                ).sort_index()
 
         if stats.glob.mean_course is not None:
             stats.glob.mean_course = stats.glob.mean_course[np.arange(1, 12 + 1)]

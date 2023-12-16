@@ -1,34 +1,23 @@
-########################################################################
-# This file is part of MELODIST - MEteoroLOgical observation time      #
-# series DISaggregation Tool a program to disaggregate daily values    #
-# of meteorological variables to hourly values                         #
-#                                                                      #
-# Copyright (C) 2016  Florian Hanzer (1, 2), Kristian Förster (1, 2),  #
-# Benjamin Winter (1, 2), Thomas Marke (1)                             #
-#                                                                      #
-# (1) Institute of Geography, University of Innsbruck, Austria         #
-# (2) alpS - Centre for Climate Change Adaptation, Innsbruck, Austria  #
-#                                                                      #
-# MELODIST is free software: you can redistribute it and/or modify     #
-# it under the terms of the GNU General Public License as published by #
-# the Free Software Foundation, either version 3 of the License, or    #
-# (at your option) any later version.                                  #
-#                                                                      #
-# MELODIST is distributed in the hope that it will be useful,          #
-# but WITHOUT ANY WARRANTY; without even the implied warranty of       #
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the         #
-# GNU General Public License for more details.                         #
-#                                                                      #
-# You should have received a copy of the GNU General Public License    #
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.#
-#                                                                      #
-########################################################################
-
-# Update 2018: Allow cascade-based disaggregation from daily data
-# to 5 minutes data (9, 10, or 11 levels of branching)
-# Author: Siling Chen
-
-
+################################################################################
+# This file is part of MELODIST - MEteoroLOgical observation time series       #
+# DISaggregation Tool.                                                         #
+#                                                                              #
+# Copyright (C) 2016-2023 Florian Hanzer, Kristian Förster, Benjamin Winter,   #
+# Thomas Marke, Siling Chen                                                    #
+#                                                                              #
+# MELODIST is free software: you can redistribute it and/or modify it under    #
+# the terms of the GNU General Public License as published by the Free         #
+# Software Foundation, either version 3 of the License, or (at your option)    #
+# any later version.                                                           #
+#                                                                              #
+# MELODIST is distributed in the hope that it will be useful, but WITHOUT ANY  #
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS    #
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more        #
+# details.                                                                     #
+#                                                                              #
+# You should have received a copy of the GNU General Public License along with #
+# this program.  If not, see <http://www.gnu.org/licenses/>.                   #
+################################################################################
 import copy
 
 import numpy as np
@@ -89,7 +78,7 @@ def disagg_prec_cascade(
     ----------
     precip_daily : pd.Series
         daily data
-    hourly : Boolean (for an hourly resolution disaggregation)
+    hourly: Boolean (for an hourly resolution disaggregation)
         if False, then returns 5-min disaggregated precipitation
         (disaggregation level depending on the "level" variable)
     cascade_options : cascade object
@@ -120,7 +109,7 @@ def disagg_prec_cascade(
         # this is the standard case considering one data set for all levels
         # get cumulative probabilities for branching
         overwrite_stats = False
-        for k in range(0, 7):
+        for k in range(7):
             wxxcum[k, :, :] = cascade_options.wxx[k, :, :]
             if k > 0:
                 wxxcum[k, :, :] = wxxcum[k - 1, :, :] + wxxcum[k, :, :]
@@ -154,46 +143,46 @@ def disagg_prec_cascade(
     wclassbounds = np.array([0.0, 0.1429, 0.2857, 0.4286, 0.5714, 0.7143, 0.8571, 1.0])
 
     # disaggregation for each level
-    for l in range(1, si + 1):
-        if l == 1:
-            vdn_in = precip_daily
+    for lev in range(1, si + 1):
+        if lev == 1:
+            vdn_in = precip_daily.values
             vdn_out = vdn1
-        elif l == 2:
+        elif lev == 2:
             vdn_in = vdn_out
             vdn_out = vdn2
-        elif l == 3:
+        elif lev == 3:
             vdn_in = vdn_out
             vdn_out = vdn3
-        elif l == 4:
+        elif lev == 4:
             vdn_in = vdn_out
             vdn_out = vdn4
-        elif l == 5:
+        elif lev == 5:
             vdn_in = vdn_out
             vdn_out = vdn5
 
-        elif l == 6:
+        elif lev == 6:
             vdn_in = vdn_out
             vdn_out = vdn6
-        elif l == 7:
+        elif lev == 7:
             vdn_in = vdn_out
             vdn_out = vdn7
-        elif l == 8:
+        elif lev == 8:
             vdn_in = vdn_out
             vdn_out = vdn8
-        elif l == 9:
+        elif lev == 9:
             vdn_in = vdn_out
             vdn_out = vdn9
-        elif l == 10:
+        elif lev == 10:
             vdn_in = vdn_out
             vdn_out = vdn10
-        elif l == 11:
+        elif lev == 11:
             vdn_in = vdn_out
             vdn_out = vdn11
 
         si -= 1
         if overwrite_stats:
             cascade_options = list_casc[si]
-            for k in range(0, 7):
+            for k in range(7):
                 wxxcum[k, :, :] = cascade_options.wxx[k, :, :]
                 if k > 0:
                     wxxcum[k, :, :] = wxxcum[k - 1, :, :] + wxxcum[k, :, :]
@@ -210,7 +199,7 @@ def disagg_prec_cascade(
         # see above
 
         j = 0
-        for i in range(0, len(vdn_in)):
+        for i, _ in enumerate(vdn_in):
             # it's raining now?
             if vdn_in[i] > 0:
                 # determine type of box
@@ -270,7 +259,7 @@ def disagg_prec_cascade(
                     rndw = np.random.random()
 
                     # guess w1:
-                    for k in range(0, 7):
+                    for k in range(7):
                         if rndw <= wxxcum[k, belowabove, vbtype - 1]:
                             w1 = wclassbounds[k + 1] - 1.0 / 14.0  # class center
                             break
@@ -294,16 +283,14 @@ def disagg_prec_cascade(
     if hourly:
         # uniformly disaggregate 0.75 h values to 0.25 h values
         vdn_025 = np.zeros(len(vdn_out) * 3)
-        j = 0
-        for i in range(0, len(vdn_out)):
-            for m in range(0, 3):
-                vdn_025[j + m] = vdn_out[i] / 3.0
-            j = j + 3
+        for i, _ in enumerate(vdn_out):
+            for m in range(3):
+                vdn_025[i * 3 + m] = vdn_out[i] / 3.0
 
         # aggregate to hourly time steps
         vdn_025cs = np.cumsum(vdn_025)
         vdn = np.zeros(int(len(vdn_025) / 4))
-        for i in range(0, len(vdn) + 1):
+        for i in range(len(vdn) + 1):
             # for first hour take 4th item
             if i == 0:
                 vdn[i] = vdn_025cs[3]
@@ -317,7 +304,7 @@ def disagg_prec_cascade(
 
     else:
         precip_sn = pd.Series(
-            index=sub_level_index(precip_daily.index, level=level),
+            index=sub_level_index(precip_daily.index, level=level, fill_gaps=False),
             data=vdn_out,
         )
         disagg_precip = precip_sn.resample("5min").sum()
@@ -391,7 +378,7 @@ def precip_master_station(precip_daily, master_precip_hourly, zerodiv):
     ----------
     precip_daily : pd.Series
         daily data
-    master_precip_hourly : pd.Series
+    master_precip_hourly :  pd.Series
         observed hourly data of the master station
     zerodiv : str
         method to deal with zero division by key "uniform" --> uniform
@@ -425,13 +412,13 @@ def precip_master_station(precip_daily, master_precip_hourly, zerodiv):
     return precip_hourly
 
 
-def aggregate_precipitation(vec_data, hourly=True, percentile=50):
+def aggregate_precipitation(vec_data, percentile=50):
     """Aggregates highly resolved precipitation data and creates statistics
 
     Parameters
     ----------
     vec_data : pd.Series
-        hourly (hourly=True) OR 5-min values
+        hourly OR 5-min values
 
     Returns
     -------
@@ -451,7 +438,7 @@ def aggregate_precipitation(vec_data, hourly=True, percentile=50):
     vdn0 = []
     vtn0 = []
     j = 0
-    for i in range(0, n_in):
+    for i in range(n_in):
         if np.mod(i, 2) != 0:
             vdn0.append(vec_data.precip.values[i - 1] + vec_data.precip.values[i])
             vtn0.append(vec_time[i])
@@ -463,7 +450,7 @@ def aggregate_precipitation(vec_data, hourly=True, percentile=50):
     n_out = len(vdn)
 
     # series of box types:
-    vbtype = np.zeros((n_out,), dtype=np.int)
+    vbtype = np.zeros((n_out,), dtype=np.int64)
 
     # fields for empirical probabilities
     # counts
@@ -488,7 +475,7 @@ def aggregate_precipitation(vec_data, hourly=True, percentile=50):
     cascade_opt.threshold = np.array([meanvol])
 
     # 2nd step: classify boxes at the upper level
-    for i in range(0, n_out):
+    for i in range(n_out):
         if vdn.precip.values[i] > 0.0:  # rain?
             if i == 0:  # only starting or isolated
                 if vdn.precip.values[i + 1] > 0.0:
@@ -514,7 +501,7 @@ def aggregate_precipitation(vec_data, hourly=True, percentile=50):
 
     # 3rd step: examine branching
     j = 0
-    for i in range(0, n_in):
+    for i in range(n_in):
         if np.mod(i, 2) != 0:
             if vdn.precip.values[j] > 0:
                 if vdn.precip.values[j] > meanvol:
@@ -553,7 +540,7 @@ def aggregate_precipitation(vec_data, hourly=True, percentile=50):
                         print("error")
                         return cascade_opt, vdn
 
-                    for k in range(0, 7):
+                    for k in range(7):
                         if wxxval > wlower[k] and wxxval <= wupper[k]:
                             cascade_opt.wxx[k, belowabove, vbtype[j] - 1] += 1
                             break
@@ -567,7 +554,7 @@ def aggregate_precipitation(vec_data, hourly=True, percentile=50):
     with np.errstate(
         divide="ignore", invalid="ignore"
     ):  # do not issue warnings here when dividing by zero, this is handled below
-        for k in range(0, 7):
+        for k in range(7):
             cascade_opt.wxx[k, :, :] = cascade_opt.wxx[k, :, :] / nbxx[:, :]
 
     # In some cases, the time series are too short for deriving statistics.
@@ -597,18 +584,14 @@ def aggregate_precipitation(vec_data, hourly=True, percentile=50):
         )
         print(
             "Try to use longer time series that might be more "
-            "appropriate for deriving statistics. ",
+            "appropriate for deriving statistics. "
+            "As a workaround, default values according to equally distributed probabilities "
+            "will be applied... ",
             end="",
         )
-        print(
-            "As a workaround, default values according to equally "
-            "distributed probabilities ",
-            end="",
-        )
-        print("will be applied...", end="")
         cascade_opt.wxx[np.isnan(cascade_opt.wxx)] = 1.0 / 7.0
         wxx = np.zeros((2, 4))
-        for k in range(0, 7):
+        for k in range(7):
             wxx[:, :] += cascade_opt.wxx[k, :, :]
         if wxx.any() > 1.001 or wxx.any() < 0.999:
             print("failed! Using default values!")
@@ -625,21 +608,19 @@ def seasonal_subset(dataframe, months="all"):
     Parameters
     ----------
     dataframe : pd.DataFrame
-    months : int, str
+    months: int, str
         Months to use for statistics, or 'all' for 1-12 (default='all')
     """
 
     if isinstance(months, str) and months == "all":
         months = np.arange(12) + 1
 
-    for month_num, month in enumerate(months):
+    dfs = []
+    for _, month in enumerate(months):
         df_cur = dataframe[dataframe.index.month == month]
+        dfs.append(df_cur)
 
-        if month_num == 0:
-            df = df_cur
-        else:
-            df = df.append(df_cur)
-
+    df = pd.concat(dfs)
     return df.sort_index()
 
 
@@ -653,6 +634,7 @@ def build_casc(
     ObsData : pd.Series
         hourly=True -> hourly obs data
         else -> 5min data (disaggregation level=9 (default), 10, 11)
+
     months : numpy array of ints
         Months for each seasons to be used for statistics (array of
         numpy array, default=1-12, e.g., [np.arange(12) + 1])
@@ -692,19 +674,17 @@ def build_casc(
 
         thresholds = np.zeros(aggre_level)  # np.array([0., 0., 0., 0., 0.])
 
-        for i in range(0, aggre_level):
+        for i in range(aggre_level):
             # aggregate the data
-            casc_opt_i, vdn = aggregate_precipitation(
-                vdn, hourly, percentile=percentile
-            )
-            thresholds[i] = casc_opt_i.threshold
+            casc_opt_i, vdn = aggregate_precipitation(vdn, percentile=percentile)
+            thresholds[i] = casc_opt_i.threshold[0]
             copy_of_casc_opt_i = copy.copy(casc_opt_i)
             list_casc_opt.append(copy_of_casc_opt_i)
             n_vdn = len(vdn)
-            casc_opt_i * n_vdn  # level related weighting
-            casc_opt + casc_opt_i  # add to total statistics
+            casc_opt_i * n_vdn  # level related weighting # FIX
+            casc_opt + casc_opt_i  # add to total statistics # FIX
             count = count + n_vdn
-        casc_opt * (1.0 / count)  # transfer weighted matrices to probabilities
+        casc_opt * (1.0 / count)  # transfer weighted matrices to probabilities # FIX
         casc_opt.threshold = thresholds
 
         # statistics object
