@@ -1,30 +1,23 @@
-########################################################################
-# This file is part of MELODIST - MEteoroLOgical observation time      #
-# series DISaggregation Tool a program to disaggregate daily values    #
-# of meteorological variables to hourly values                         #
-#                                                                      #
-# Copyright (C) 2016  Florian Hanzer (1, 2), Kristian Förster (1, 2),  #
-# Benjamin Winter (1, 2), Thomas Marke (1)                             #
-#                                                                      #
-# (1) Institute of Geography, University of Innsbruck, Austria         #
-# (2) alpS - Centre for Climate Change Adaptation, Innsbruck, Austria  #
-#                                                                      #
-# MELODIST is free software: you can redistribute it and/or modify     #
-# it under the terms of the GNU General Public License as published by #
-# the Free Software Foundation, either version 3 of the License, or    #
-# (at your option) any later version.                                  #
-#                                                                      #
-# MELODIST is distributed in the hope that it will be useful,          #
-# but WITHOUT ANY WARRANTY; without even the implied warranty of       #
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the         #
-# GNU General Public License for more details.                         #
-#                                                                      #
-# You should have received a copy of the GNU General Public License    #
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.#
-#                                                                      #
-########################################################################
-
-
+################################################################################
+# This file is part of MELODIST - MEteoroLOgical observation time series       #
+# DISaggregation Tool.                                                         #
+#                                                                              #
+# Copyright (C) 2016-2023 Florian Hanzer, Kristian Förster, Benjamin Winter,   #
+# Thomas Marke                                                                 #
+#                                                                              #
+# MELODIST is free software: you can redistribute it and/or modify it under    #
+# the terms of the GNU General Public License as published by the Free         #
+# Software Foundation, either version 3 of the License, or (at your option)    #
+# any later version.                                                           #
+#                                                                              #
+# MELODIST is distributed in the hope that it will be useful, but WITHOUT ANY  #
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS    #
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more        #
+# details.                                                                     #
+#                                                                              #
+# You should have received a copy of the GNU General Public License along with #
+# this program.  If not, see <http://www.gnu.org/licenses/>.                   #
+################################################################################
 import numpy as np
 import pandas as pd
 import scipy.optimize
@@ -33,7 +26,7 @@ from .util.util import distribute_equally
 
 
 def _cosine_function(x, a, b, t_shift):
-    """genrates a diurnal course of windspeed accroding to the cosine function
+    """Generate a diurnal course of windspeed according to the cosine function
 
     Args:
         x: series of euqally distributed windspeed values
@@ -52,7 +45,7 @@ def _cosine_function(x, a, b, t_shift):
 
 
 def disaggregate_wind(wind_daily, method="equal", a=None, b=None, t_shift=None):
-    """general function for windspeed disaggregation
+    """General function for windspeed disaggregation
 
     Args:
         wind_daily: daily values
@@ -88,7 +81,7 @@ def disaggregate_wind(wind_daily, method="equal", a=None, b=None, t_shift=None):
 
 
 def fit_cosine_function(wind):
-    """fits a cosine function to observed hourly windspeed data
+    """Fit a cosine function to observed hourly windspeed data
 
     Args:
         wind: observed hourly windspeed data

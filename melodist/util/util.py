@@ -1,30 +1,23 @@
-########################################################################
-# This file is part of MELODIST - MEteoroLOgical observation time      #
-# series DISaggregation Tool a program to disaggregate daily values    #
-# of meteorological variables to hourly values                         #
-#                                                                      #
-# Copyright (C) 2016  Florian Hanzer (1, 2), Kristian Förster (1, 2),  #
-# Benjamin Winter (1, 2), Thomas Marke (1)                             #
-#                                                                      #
-# (1) Institute of Geography, University of Innsbruck, Austria         #
-# (2) alpS - Centre for Climate Change Adaptation, Innsbruck, Austria  #
-#                                                                      #
-# MELODIST is free software: you can redistribute it and/or modify     #
-# it under the terms of the GNU General Public License as published by #
-# the Free Software Foundation, either version 3 of the License, or    #
-# (at your option) any later version.                                  #
-#                                                                      #
-# MELODIST is distributed in the hope that it will be useful,          #
-# but WITHOUT ANY WARRANTY; without even the implied warranty of       #
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the         #
-# GNU General Public License for more details.                         #
-#                                                                      #
-# You should have received a copy of the GNU General Public License    #
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.#
-#                                                                      #
-########################################################################
-
-
+################################################################################
+# This file is part of MELODIST - MEteoroLOgical observation time series       #
+# DISaggregation Tool.                                                         #
+#                                                                              #
+# Copyright (C) 2016-2023 Florian Hanzer, Kristian Förster, Benjamin Winter,   #
+# Thomas Marke                                                                 #
+#                                                                              #
+# MELODIST is free software: you can redistribute it and/or modify it under    #
+# the terms of the GNU General Public License as published by the Free         #
+# Software Foundation, either version 3 of the License, or (at your option)    #
+# any later version.                                                           #
+#                                                                              #
+# MELODIST is distributed in the hope that it will be useful, but WITHOUT ANY  #
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS    #
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more        #
+# details.                                                                     #
+#                                                                              #
+# You should have received a copy of the GNU General Public License along with #
+# this program.  If not, see <http://www.gnu.org/licenses/>.                   #
+################################################################################
 import numpy as np
 import pandas as pd
 import scipy.stats
@@ -68,9 +61,7 @@ def distribute_equally(daily_data, divide=False):
 
     index = hourly_index(daily_data.index)
     hourly_data = daily_data.reindex(index)
-    hourly_data = hourly_data.groupby(hourly_data.index.day).transform(
-        lambda x: x.fillna(method="ffill", limit=23)
-    )
+    hourly_data = hourly_data.groupby(hourly_data.index.day).ffill(limit=23)
 
     if divide:
         hourly_data /= 24
@@ -126,6 +117,7 @@ def dewpoint_temperature(temp, hum):
     temp :      temperature [K]
     hum :       relative humidity
 
+
     Returns
         dewpoint temperature in K
     """
@@ -158,6 +150,7 @@ def linregress(x, y, return_stats=False):
     y :         dependent variable (series)
     return_stats : returns statistical values as well if required (bool)
 
+
     Returns
     ----
     list of parameters (and statistics)
@@ -171,7 +164,7 @@ def linregress(x, y, return_stats=False):
     return retval
 
 
-def get_sun_times(dates, lon, lat, timezone=None):
+def get_sun_times(dates, lon, lat, time_zone=None):
     """Computes the times of sunrise, solar noon, and sunset for each day.
 
     Parameters
@@ -179,7 +172,7 @@ def get_sun_times(dates, lon, lat, timezone=None):
     dates:      datetime
     lat :       latitude in DecDeg
     lon :       longitude in DecDeg
-    timezone : timezone
+    time_zone : timezone
 
     Returns
     ----
@@ -222,8 +215,8 @@ def get_sun_times(dates, lon, lat, timezone=None):
     )
 
     #
-    if timezone is None:
-        standard_meridian = timezone * 15.0
+    if time_zone is None:
+        standard_meridian = time_zone * 15.0
     else:
         standard_meridian = round(lon / 15.0) * 15.0
     delta_lat_time = (lon - standard_meridian) * 24.0 / 360.0
@@ -269,7 +262,7 @@ def get_sun_times(dates, lon, lat, timezone=None):
 def detect_gaps(dataframe, timestep, print_all=False, print_max=5, verbose=True):
     """checks if a given dataframe contains gaps and returns the number of gaps
 
-    This funtion checks if a dataframe contains any gaps for a given temporal
+    This function checks if a dataframe contains any gaps for a given temporal
     resolution that needs to be specified in seconds. The number of gaps
     detected in the dataframe is returned.
 
@@ -293,7 +286,7 @@ def detect_gaps(dataframe, timestep, print_all=False, print_max=5, verbose=True)
     except:
         print("Error: Invalid dataframe.")
         return -1
-    for i in range(0, n):
+    for i in range(n):
         if i > 0:
             time_diff = dataframe.index[i] - dataframe.index[i - 1]
             if time_diff.delta / 1e9 != timestep:
@@ -317,7 +310,7 @@ def detect_gaps(dataframe, timestep, print_all=False, print_max=5, verbose=True)
 def drop_incomplete_days(dataframe, shift=0):
     """truncates a given dataframe to full days only
 
-    This funtion truncates a given pandas dataframe (time series) to full days
+    This function truncates a given pandas dataframe (time series) to full days
     only, thus dropping leading and tailing hours of incomplete days. Please
     note that this methodology only applies to hourly time series.
 
@@ -350,7 +343,7 @@ def drop_incomplete_days(dataframe, shift=0):
     delete = []
 
     # drop heading lines if required
-    for i in range(0, n):
+    for i in range(n):
         if dataframe.index.hour[i] == first and dataframe.index.minute[i] == 0:
             break
         delete.append(i)
@@ -360,9 +353,8 @@ def drop_incomplete_days(dataframe, shift=0):
     for i in range(n - 1, 0, -1):
         if dataframe.index.hour[i] == last and dataframe.index.minute[i] == 0:
             break
-        else:
-            delete.append(i)
-            dropped += 1
+        delete.append(i)
+        dropped += 1
     # print("The following rows have been dropped (%i in total):" % dropped)
     # print(delete)
     return dataframe.drop(dataframe.index[[delete]])
@@ -437,7 +429,7 @@ def calculate_mean_daily_course_by_month(data_hourly, normalize=False):
     data_hourly.index.name = None
 
     df = data_hourly.groupby([data_hourly.index.month, data_hourly.index.hour]).mean()
-    df = df.reset_index().pivot("level_1", "level_0")
+    df = df.reset_index().pivot(columns="level_0", index="level_1")
     df.columns = df.columns.droplevel()  # remove MultiIndex
     df.columns.name = None
     df.index.name = None
