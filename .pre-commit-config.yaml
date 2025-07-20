@@ -71,11 +71,6 @@ repos:
             types: [pyi]
             args: [--profile, black, --filter-files]
 
-    - repo: https://github.com/dfm/black_nbconvert
-      rev: v0.4.0
-      hooks:
-          - id: black_nbconvert
-
     - repo: https://github.com/asottile/blacken-docs
       rev: 1.13.0
       hooks:

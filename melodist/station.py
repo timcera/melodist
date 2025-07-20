@@ -253,7 +253,7 @@ class Station:
             temp=self.data_disagg.temp,
             method=method,
             preserve_daily_mean=preserve_daily_mean,
-            **self.statistics.hum
+            **self.statistics.hum,
         )
 
     def disaggregate_temperature(
