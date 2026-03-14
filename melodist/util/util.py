@@ -22,10 +22,14 @@ import numpy as np
 import pandas as pd
 import scipy.stats
 
+from mettoolbox.toolbox_utils.src.toolbox_utils.utils import pandas_offset_by_version
+
 
 def hourly_index(daily_index, fill_gaps=False):
     index = pd.date_range(
-        start=daily_index.min(), end=daily_index.max().replace(hour=23), freq="H"
+        start=daily_index.min(),
+        end=daily_index.max().replace(hour=23),
+        freq=pandas_offset_by_version("h"),
     )
 
     # remove days that are not in the daily index:
@@ -61,7 +65,9 @@ def distribute_equally(daily_data, divide=False):
 
     index = hourly_index(daily_data.index)
     hourly_data = daily_data.reindex(index)
-    hourly_data = hourly_data.groupby(hourly_data.index.day).ffill(limit=23)
+    hourly_data = hourly_data.groupby(hourly_data.index.day).transform(
+        lambda x: x.ffill(limit=23)
+    )
 
     if divide:
         hourly_data /= 24

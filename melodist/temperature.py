@@ -183,6 +183,8 @@ def disaggregate_temperature(
                 )
         elif method == "sine_mean":
             dtr = locdf.max_val_cur - locdf.min_val_cur
+            dtr = dtr.astype("float64")
+            locdf = locdf.astype("float64")
             temp_disagg[:] = locdf.mean_val_cur + dtr / 2.0 * np.cos(
                 2 * np.pi / hours_per_day * (locdf.index.hour - locdf.max_loc)
             )

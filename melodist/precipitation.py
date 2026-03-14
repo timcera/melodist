@@ -412,13 +412,13 @@ def precip_master_station(precip_daily, master_precip_hourly, zerodiv):
     return precip_hourly
 
 
-def aggregate_precipitation(vec_data, percentile=50):
+def aggregate_precipitation(vec_data, hourly=True, percentile=50):
     """Aggregates highly resolved precipitation data and creates statistics
 
     Parameters
     ----------
     vec_data : pd.Series
-        hourly OR 5-min values
+        hourly (hourly=True) OR 5-min values
 
     Returns
     -------
@@ -676,7 +676,9 @@ def build_casc(
 
         for i in range(aggre_level):
             # aggregate the data
-            casc_opt_i, vdn = aggregate_precipitation(vdn, percentile=percentile)
+            casc_opt_i, vdn = aggregate_precipitation(
+                vdn, hourly, percentile=percentile
+            )
             thresholds[i] = casc_opt_i.threshold[0]
             copy_of_casc_opt_i = copy.copy(casc_opt_i)
             list_casc_opt.append(copy_of_casc_opt_i)
