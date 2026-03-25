@@ -57,7 +57,7 @@ def disaggregate_temperature(
     ):
         raise ValueError("Invalid option")
 
-    temp_disagg = pd.Series(index=hourly_index(data_daily.index), dtype=float)
+    temp_disagg = pd.Series(index=hourly_index(data_daily.index), dtype="Float64")
 
     if method in ("sine_min_max", "sine_mean", "sine"):
         # for this option assume time of minimum and maximum and fit
