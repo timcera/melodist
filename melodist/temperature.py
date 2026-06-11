@@ -148,7 +148,7 @@ def disaggregate_temperature(
         max_val = locdf.max_val_cur.copy()
         max_val[max_val.index.hour < locdf.min_loc] = locdf.max_val_before
 
-        temp_disagg = pd.Series(index=min_val.index, dtype=float)
+        temp_disagg = pd.Series(index=min_val.index, dtype="Float64")
 
         if method in ("sine_min_max", "sine"):
             delta_val = max_val - min_val
@@ -289,7 +289,7 @@ def disaggregate_temperature(
             temp_disagg.index, method="ffill", limit=23
         )
         dtr = data_daily_as_hourly.tmax - data_daily_as_hourly.tmin
-        mc = pd.Series(index=temp_disagg.index, dtype=float)
+        mc = pd.Series(index=temp_disagg.index, dtype="Float64")
         mean_course_zeromean = (
             mean_course - mean_course.mean()
         )  # shift mean course so that the daily mean is 0
